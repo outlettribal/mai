@@ -27,9 +27,10 @@ Incluye MVP técnico con:
 2. Activar plugin desde WordPress.
 3. Ir a **Estéticas Mai** en el menú de admin.
 4. (Opcional) Usar **Cargar datos iniciales** para precargar sedes y servicios base.
-5. Crear/ajustar sedes con nombre, dirección y teléfono, y asignar administradora por sede.
-6. Crear esteticistas y asignarlas a una sede.
-7. Crear páginas con shortcodes:
+5. Crear esteticistas (pueden quedar sin sede al inicio).
+6. Crear/ajustar sedes con nombre, dirección y teléfono.
+7. Asignar administradora por sede en la tabla editable de sedes.
+8. Crear páginas con shortcodes:
    - `[mai_client_portal]`
    - `[mai_staff_portal]`
 

@@ -97,7 +97,7 @@ class Mai_Esteticas_Mai_Suite_Admin
         ?>
         <div class="wrap">
             <h1>Portal Administrativo Estéticas Mai</h1>
-            <p>Desde aquí puedes crear sedes, editar sedes, crear esteticistas, asignar administradora de sede y precargar servicios/sedes base.</p>
+            <p>Flujo recomendado: <strong>1) Crear esteticistas</strong> → <strong>2) Crear/editar sedes</strong> → <strong>3) Asignar administradora por sede</strong>.</p>
 
             <?php if ($success) : ?>
                 <div class="notice notice-success"><p><?php echo esc_html($success); ?></p></div>
@@ -114,6 +114,43 @@ class Mai_Esteticas_Mai_Suite_Admin
                 <?php wp_nonce_field('mai_seed_initial_data_nonce'); ?>
                 <input type="hidden" name="action" value="mai_seed_initial_data"/>
                 <?php submit_button('Cargar datos iniciales', 'secondary'); ?>
+            </form>
+
+            <hr/>
+            <h2>Crear esteticista</h2>
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <?php wp_nonce_field('mai_create_esteticista_nonce'); ?>
+                <input type="hidden" name="action" value="mai_create_esteticista"/>
+                <table class="form-table">
+                    <tr>
+                        <th><label for="mai_est_name">Nombre completo</label></th>
+                        <td><input type="text" class="regular-text" id="mai_est_name" name="display_name" required/></td>
+                    </tr>
+                    <tr>
+                        <th><label for="mai_est_email">Email</label></th>
+                        <td><input type="email" class="regular-text" id="mai_est_email" name="email" required/></td>
+                    </tr>
+                    <tr>
+                        <th><label for="mai_est_password">Contraseña</label></th>
+                        <td><input type="text" class="regular-text" id="mai_est_password" name="password" value="<?php echo esc_attr(wp_generate_password(12, false)); ?>" required/></td>
+                    </tr>
+                    <tr>
+                        <th><label for="mai_est_sede">Sede (opcional al crear)</label></th>
+                        <td>
+                            <select id="mai_est_sede" name="sede_id">
+                                <option value="">Sin sede por ahora</option>
+                                <?php foreach ($this->get_sedes() as $sede) : ?>
+                                    <option value="<?php echo esc_attr((string) $sede['id']); ?>"><?php echo esc_html($sede['name']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="mai_est_specialties">Especialidades</label></th>
+                        <td><input type="text" class="regular-text" id="mai_est_specialties" name="specialties" placeholder="Limpieza facial, depilación láser"/></td>
+                    </tr>
+                </table>
+                <?php submit_button('Crear esteticista'); ?>
             </form>
 
             <hr/>
@@ -162,43 +199,6 @@ class Mai_Esteticas_Mai_Suite_Admin
                     </tr>
                 </table>
                 <?php submit_button('Crear sede'); ?>
-            </form>
-
-            <hr/>
-            <h2>Crear esteticista</h2>
-            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                <?php wp_nonce_field('mai_create_esteticista_nonce'); ?>
-                <input type="hidden" name="action" value="mai_create_esteticista"/>
-                <table class="form-table">
-                    <tr>
-                        <th><label for="mai_est_name">Nombre completo</label></th>
-                        <td><input type="text" class="regular-text" id="mai_est_name" name="display_name" required/></td>
-                    </tr>
-                    <tr>
-                        <th><label for="mai_est_email">Email</label></th>
-                        <td><input type="email" class="regular-text" id="mai_est_email" name="email" required/></td>
-                    </tr>
-                    <tr>
-                        <th><label for="mai_est_password">Contraseña</label></th>
-                        <td><input type="text" class="regular-text" id="mai_est_password" name="password" value="<?php echo esc_attr(wp_generate_password(12, false)); ?>" required/></td>
-                    </tr>
-                    <tr>
-                        <th><label for="mai_est_sede">Sede</label></th>
-                        <td>
-                            <select id="mai_est_sede" name="sede_id" required>
-                                <option value="">Selecciona una sede</option>
-                                <?php foreach ($this->get_sedes() as $sede) : ?>
-                                    <option value="<?php echo esc_attr((string) $sede['id']); ?>"><?php echo esc_html($sede['name']); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th><label for="mai_est_specialties">Especialidades</label></th>
-                        <td><input type="text" class="regular-text" id="mai_est_specialties" name="specialties" placeholder="Limpieza facial, depilación láser"/></td>
-                    </tr>
-                </table>
-                <?php submit_button('Crear esteticista'); ?>
             </form>
 
             <hr/>
@@ -301,7 +301,7 @@ class Mai_Esteticas_Mai_Suite_Admin
                     }
 
                     $ok = $wpdb->insert("{$wpdb->prefix}mai_services", [
-                        'sede_id' => $sede_id,
+                        'sede_id' => $sede_id > 0 ? $sede_id : 0,
                         'category' => $category,
                         'name' => $service_name,
                         'duration_minutes' => 60,
@@ -318,6 +318,10 @@ class Mai_Esteticas_Mai_Suite_Admin
                     }
                 }
             }
+        }
+
+        if ($created_sedes === 0 && $created_services === 0) {
+            $this->redirect_with('mai_success', 'Los datos base ya estaban cargados. No fue necesario crear nuevos registros.');
         }
 
         $this->redirect_with('mai_success', sprintf('Datos base cargados. Sedes nuevas: %d. Servicios nuevos: %d.', $created_sedes, $created_services));
@@ -429,17 +433,19 @@ class Mai_Esteticas_Mai_Suite_Admin
         $sede_id = absint($_POST['sede_id'] ?? 0);
         $specialties = sanitize_text_field((string) ($_POST['specialties'] ?? ''));
 
-        if (!$display_name || !$email || !$password || !$sede_id) {
-            $this->redirect_with('mai_error', 'Completa todos los campos obligatorios para crear la esteticista.');
+        if (!$display_name || !$email || !$password) {
+            $this->redirect_with('mai_error', 'Completa nombre, email y contraseña para crear la esteticista.');
         }
 
-        $sede_exists = (int) $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$wpdb->prefix}mai_sedes WHERE id = %d",
-            $sede_id
-        ));
+        if ($sede_id > 0) {
+            $sede_exists = (int) $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}mai_sedes WHERE id = %d",
+                $sede_id
+            ));
 
-        if ($sede_exists === 0) {
-            $this->redirect_with('mai_error', 'La sede seleccionada no existe.');
+            if ($sede_exists === 0) {
+                $this->redirect_with('mai_error', 'La sede seleccionada no existe.');
+            }
         }
 
         if (email_exists($email)) {
@@ -460,7 +466,7 @@ class Mai_Esteticas_Mai_Suite_Admin
 
         $inserted = $wpdb->insert("{$wpdb->prefix}mai_specialists", [
             'wp_user_id' => $user_id,
-            'sede_id' => $sede_id,
+            'sede_id' => $sede_id > 0 ? $sede_id : 0,
             'specialties' => $specialties,
             'is_active' => 1,
         ]);
@@ -471,7 +477,11 @@ class Mai_Esteticas_Mai_Suite_Admin
             $this->redirect_with('mai_error', 'No se pudo crear el registro de esteticista en la base de datos.');
         }
 
-        $this->redirect_with('mai_success', 'Esteticista creada y asignada a la sede correctamente.');
+        $msg = $sede_id > 0
+            ? 'Esteticista creada y asignada a la sede correctamente.'
+            : 'Esteticista creada sin sede. Puedes asignarla después.';
+
+        $this->redirect_with('mai_success', $msg);
     }
 
     /** @return array<int, array{id:int,name:string,timezone:string}> */
