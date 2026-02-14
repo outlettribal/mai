@@ -19,6 +19,7 @@ require_once MAI_ESTETICAS_MAI_SUITE_PATH . 'includes/class-mai-esteticas-mai-su
 require_once MAI_ESTETICAS_MAI_SUITE_PATH . 'includes/class-mai-esteticas-mai-suite-roles.php';
 require_once MAI_ESTETICAS_MAI_SUITE_PATH . 'includes/class-mai-esteticas-mai-suite-shortcodes.php';
 require_once MAI_ESTETICAS_MAI_SUITE_PATH . 'includes/class-mai-esteticas-mai-suite-rest.php';
+require_once MAI_ESTETICAS_MAI_SUITE_PATH . 'includes/class-mai-esteticas-mai-suite-admin.php';
 require_once MAI_ESTETICAS_MAI_SUITE_PATH . 'includes/class-mai-esteticas-mai-suite-plugin.php';
 
 register_activation_hook(__FILE__, ['Mai_Esteticas_Mai_Suite_Activator', 'activate']);

@@ -32,11 +32,13 @@ class Mai_Esteticas_Mai_Suite_Activator
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             name VARCHAR(191) NOT NULL,
             timezone VARCHAR(100) NOT NULL DEFAULT 'America/Bogota',
+            manager_user_id BIGINT UNSIGNED NULL,
             weekly_schedule LONGTEXT NULL,
             holidays LONGTEXT NULL,
             is_active TINYINT(1) NOT NULL DEFAULT 1,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id)
+            PRIMARY KEY (id),
+            KEY manager_user_id (manager_user_id)
         ) {$charset_collate};";
 
         $queries[] = "CREATE TABLE {$prefix}specialists (

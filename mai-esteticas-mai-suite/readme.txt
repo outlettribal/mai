@@ -17,12 +17,14 @@ Incluye MVP técnico con:
 - Endpoints REST `/wp-json/mai/v1/...`.
 - Portales por shortcode `[mai_client_portal]` y `[mai_staff_portal]`.
 - Estados de cita y auditoría.
+- Portal administrativo WP para crear sedes, crear esteticistas y asignar administradora por sede.
 
 == Instalación ==
 
 1. Copiar carpeta `mai-esteticas-mai-suite` en `wp-content/plugins/`.
 2. Activar plugin desde WordPress.
-3. Crear páginas con shortcodes:
+3. Ir a **Estéticas Mai** en el menú de admin para cargar datos iniciales (sedes, esteticistas y administradora por sede).
+4. Crear páginas con shortcodes:
    - `[mai_client_portal]`
    - `[mai_staff_portal]`
 
