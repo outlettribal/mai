@@ -1443,6 +1443,7 @@ class EC_Core {
 				'show_past' => 'yes',
 				'date_from' => '',
 				'date_to' => '',
+				'range' => '',
 			),
 			$atts,
 			'ec_client_appointments'
@@ -1493,6 +1494,15 @@ class EC_Core {
 			$temp = $date_from;
 			$date_from = $date_to;
 			$date_to = $temp;
+		}
+		$range = sanitize_key( (string) $atts['range'] );
+		if ( isset( $_GET['eca_range'] ) ) {
+			$range = sanitize_key( (string) wp_unslash( $_GET['eca_range'] ) );
+		}
+		if ( in_array( $range, array( 'next_7_days', 'next_30_days' ), true ) ) {
+			$date_from = $today;
+			$days = 'next_30_days' === $range ? 30 : 7;
+			$date_to = gmdate( 'Y-m-d', strtotime( $today . ' +' . $days . ' days' ) );
 		}
 
 		$meta_query = array(
@@ -1545,7 +1555,7 @@ class EC_Core {
 		);
 
 		if ( empty( $appointments ) ) {
-			if ( $filter_status || ! $show_past || $date_from || $date_to ) {
+			if ( $filter_status || ! $show_past || $date_from || $date_to || $range ) {
 				return $message . '<p>' . esc_html__( 'No hay citas para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
 			}
 			return $message . '<p>' . esc_html__( 'No tienes citas registradas.', 'electrocam-crm' ) . '</p>';
@@ -1590,6 +1600,7 @@ class EC_Core {
 			'eca_show_past' => $show_past ? 'yes' : 'no',
 			'eca_from' => $date_from,
 			'eca_to' => $date_to,
+			'eca_range' => $range,
 		);
 
 		$pagination_links = array();
@@ -1860,6 +1871,7 @@ class EC_Core {
 				'show_past' => 'yes',
 				'date_from' => '',
 				'date_to' => '',
+				'range' => '',
 			),
 			$atts,
 			'ec_operator_appointments'
@@ -1914,6 +1926,15 @@ class EC_Core {
 			$temp = $date_from;
 			$date_from = $date_to;
 			$date_to = $temp;
+		}
+		$range = sanitize_key( (string) $atts['range'] );
+		if ( isset( $_GET['eca_range'] ) ) {
+			$range = sanitize_key( (string) wp_unslash( $_GET['eca_range'] ) );
+		}
+		if ( in_array( $range, array( 'next_7_days', 'next_30_days' ), true ) ) {
+			$date_from = $today;
+			$days = 'next_30_days' === $range ? 30 : 7;
+			$date_to = gmdate( 'Y-m-d', strtotime( $today . ' +' . $days . ' days' ) );
 		}
 
 		$service_orders = get_posts(
@@ -1986,7 +2007,7 @@ class EC_Core {
 		);
 
 		if ( empty( $appointments ) ) {
-			if ( $filter_status || ! $show_past || $date_from || $date_to ) {
+			if ( $filter_status || ! $show_past || $date_from || $date_to || $range ) {
 				return $message . '<p>' . esc_html__( 'No hay citas para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
 			}
 			return $message . '<p>' . esc_html__( 'No tienes citas asignadas.', 'electrocam-crm' ) . '</p>';
@@ -2029,6 +2050,7 @@ class EC_Core {
 			'eca_show_past' => $show_past ? 'yes' : 'no',
 			'eca_from' => $date_from,
 			'eca_to' => $date_to,
+			'eca_range' => $range,
 		);
 
 		$pagination_links = array();
