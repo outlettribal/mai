@@ -1499,9 +1499,9 @@ class EC_Core {
 		if ( isset( $_GET['eca_range'] ) ) {
 			$range = sanitize_key( (string) wp_unslash( $_GET['eca_range'] ) );
 		}
-		if ( in_array( $range, array( 'next_7_days', 'next_30_days' ), true ) ) {
+		if ( in_array( $range, array( 'next_7_days', 'next_30_days', 'next_90_days' ), true ) ) {
 			$date_from = $today;
-			$days = 'next_30_days' === $range ? 30 : 7;
+			$days = 'next_90_days' === $range ? 90 : ( 'next_30_days' === $range ? 30 : 7 );
 			$date_to = gmdate( 'Y-m-d', strtotime( $today . ' +' . $days . ' days' ) );
 		}
 
@@ -1931,9 +1931,9 @@ class EC_Core {
 		if ( isset( $_GET['eca_range'] ) ) {
 			$range = sanitize_key( (string) wp_unslash( $_GET['eca_range'] ) );
 		}
-		if ( in_array( $range, array( 'next_7_days', 'next_30_days' ), true ) ) {
+		if ( in_array( $range, array( 'next_7_days', 'next_30_days', 'next_90_days' ), true ) ) {
 			$date_from = $today;
-			$days = 'next_30_days' === $range ? 30 : 7;
+			$days = 'next_90_days' === $range ? 90 : ( 'next_30_days' === $range ? 30 : 7 );
 			$date_to = gmdate( 'Y-m-d', strtotime( $today . ' +' . $days . ' days' ) );
 		}
 

@@ -73,6 +73,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 51. Filtro por rango de fechas en citas (`eca_from`, `eca_to`) para cliente/operario, preservado durante la paginación.
 52. Normalización de rango de fechas en citas: si `eca_from` > `eca_to`, el sistema invierte automáticamente el rango para evitar filtros inválidos.
 53. Atajo de rango en citas con `eca_range` (`next_7_days`/`next_30_days`) para construir filtros rápidos en cliente y operario.
+54. Preset adicional `next_90_days` en `eca_range` para planificación trimestral de citas en cliente/operario.
 
 ## Estructura
 
@@ -107,7 +108,7 @@ electrocam-crm/
 - Módulo de órdenes de servicio (metabox + trazabilidad + filtros frontend): **75%**
 - Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **99%**
 - Módulo de inventario (metabox + persistencia): **40%**
-- Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **98%**
+- Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **99%**
 - Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **99%**
 - PDF y correo automático: **10%**
 - Conversación/comentarios y notificaciones: **79%**
