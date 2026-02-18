@@ -48,6 +48,8 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 26. Validación del correo CC en ajustes con mensajes de error visibles en wp-admin.
 27. Validación del correo principal de soporte y visualización de auditoría de correos en metabox de citas.
 28. Límite configurable de retención de auditoría (10-500) aplicado a historial de correos y reprogramaciones.
+29. Ítems de cotización estructurados (nombre, descripción, cantidad y valor unitario) con recálculo automático de subtotal/total e IVA al guardar.
+30. Mejor visibilidad de cotizaciones en portal cliente mostrando cantidad de ítems, subtotal, IVA y total.
 
 ## Estructura
 
@@ -80,9 +82,9 @@ electrocam-crm/
 
 - Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **95%**
 - Módulo de órdenes de servicio (metabox, guardado, consecutivo, cita de control): **70%**
-- Módulo de cotizaciones (metabox + totales básicos): **45%**
+- Módulo de cotizaciones (metabox + ítems estructurados + recálculo automático): **58%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **90%**
-- Portal cliente frontend (shortcodes listados + reprogramación inicial): **68%**
+- Portal cliente frontend (shortcodes listados + reprogramación + detalle de cotizaciones): **72%**
 - PDF y correo automático: **10%**
 - Conversación/comentarios y notificaciones: **70%**

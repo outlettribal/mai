@@ -502,6 +502,12 @@ class EC_Core {
 		$tax_rate = get_post_meta( $post->ID, 'ec_tax_rate', true );
 		$total = get_post_meta( $post->ID, 'ec_total', true );
 		$terms = get_post_meta( $post->ID, 'ec_terms_conditions', true );
+		$quote_items = get_post_meta( $post->ID, 'ec_quote_items', true );
+		if ( ! is_array( $quote_items ) ) {
+			$quote_items = array();
+		}
+
+		$max_rows = max( 5, count( $quote_items ) );
 		?>
 		<p>
 			<label for="ec_client_id"><?php esc_html_e( 'ID Cliente', 'electrocam-crm' ); ?></label><br>
@@ -521,6 +527,29 @@ class EC_Core {
 				<input type="date" name="ec_valid_until" id="ec_valid_until" class="widefat" value="<?php echo esc_attr( $valid_until ); ?>">
 			</p>
 		</div>
+		<p><strong><?php esc_html_e( 'Ítems de cotización', 'electrocam-crm' ); ?></strong></p>
+		<table class="widefat striped" style="margin-bottom:12px;">
+			<thead>
+				<tr>
+					<th><?php esc_html_e( 'Nombre', 'electrocam-crm' ); ?></th>
+					<th><?php esc_html_e( 'Descripción', 'electrocam-crm' ); ?></th>
+					<th><?php esc_html_e( 'Cantidad', 'electrocam-crm' ); ?></th>
+					<th><?php esc_html_e( 'Precio unitario', 'electrocam-crm' ); ?></th>
+				</tr>
+			</thead>
+			<tbody>
+				<?php for ( $i = 0; $i < $max_rows; $i++ ) : ?>
+					<?php $item = isset( $quote_items[ $i ] ) && is_array( $quote_items[ $i ] ) ? $quote_items[ $i ] : array(); ?>
+					<tr>
+						<td><input type="text" name="ec_quote_item_name[]" class="widefat" value="<?php echo esc_attr( isset( $item['name'] ) ? $item['name'] : '' ); ?>" maxlength="140"></td>
+						<td><input type="text" name="ec_quote_item_description[]" class="widefat" value="<?php echo esc_attr( isset( $item['description'] ) ? $item['description'] : '' ); ?>" maxlength="300"></td>
+						<td><input type="number" name="ec_quote_item_qty[]" class="widefat" value="<?php echo esc_attr( isset( $item['qty'] ) ? $item['qty'] : '' ); ?>" min="0" step="1"></td>
+						<td><input type="number" name="ec_quote_item_unit_price[]" class="widefat" value="<?php echo esc_attr( isset( $item['unit_price'] ) ? $item['unit_price'] : '' ); ?>" min="0" step="0.01"></td>
+					</tr>
+				<?php endfor; ?>
+			</tbody>
+		</table>
+		<p class="description"><?php esc_html_e( 'Si agregas ítems, el subtotal y total se recalculan automáticamente al guardar.', 'electrocam-crm' ); ?></p>
 		<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
 			<p>
 				<label for="ec_subtotal"><?php esc_html_e( 'Subtotal', 'electrocam-crm' ); ?></label><br>
@@ -735,9 +764,44 @@ class EC_Core {
 		$total = isset( $_POST['ec_total'] ) ? (float) wp_unslash( $_POST['ec_total'] ) : 0;
 		$terms = isset( $_POST['ec_terms_conditions'] ) ? sanitize_textarea_field( wp_unslash( $_POST['ec_terms_conditions'] ) ) : '';
 
-		if ( $subtotal > 0 && $total <= 0 ) {
-			$total = $subtotal + ( $subtotal * ( $tax_rate / 100 ) );
+		$item_names = isset( $_POST['ec_quote_item_name'] ) && is_array( $_POST['ec_quote_item_name'] ) ? wp_unslash( $_POST['ec_quote_item_name'] ) : array();
+		$item_descriptions = isset( $_POST['ec_quote_item_description'] ) && is_array( $_POST['ec_quote_item_description'] ) ? wp_unslash( $_POST['ec_quote_item_description'] ) : array();
+		$item_qtys = isset( $_POST['ec_quote_item_qty'] ) && is_array( $_POST['ec_quote_item_qty'] ) ? wp_unslash( $_POST['ec_quote_item_qty'] ) : array();
+		$item_unit_prices = isset( $_POST['ec_quote_item_unit_price'] ) && is_array( $_POST['ec_quote_item_unit_price'] ) ? wp_unslash( $_POST['ec_quote_item_unit_price'] ) : array();
+
+		$items = array();
+		$items_subtotal = 0;
+		$row_count = max( count( $item_names ), count( $item_descriptions ), count( $item_qtys ), count( $item_unit_prices ) );
+		for ( $i = 0; $i < $row_count; $i++ ) {
+			$name = isset( $item_names[ $i ] ) ? sanitize_text_field( $item_names[ $i ] ) : '';
+			$description = isset( $item_descriptions[ $i ] ) ? sanitize_text_field( $item_descriptions[ $i ] ) : '';
+			$qty = isset( $item_qtys[ $i ] ) ? max( 0, (float) $item_qtys[ $i ] ) : 0;
+			$unit_price = isset( $item_unit_prices[ $i ] ) ? max( 0, (float) $item_unit_prices[ $i ] ) : 0;
+
+			if ( '' === $name && '' === $description && $qty <= 0 && $unit_price <= 0 ) {
+				continue;
+			}
+
+			$line_total = round( $qty * $unit_price, 2 );
+			$items_subtotal += $line_total;
+			$items[] = array(
+				'name' => $name,
+				'description' => $description,
+				'qty' => round( $qty, 2 ),
+				'unit_price' => round( $unit_price, 2 ),
+				'line_total' => $line_total,
+			);
 		}
+
+		if ( ! empty( $items ) ) {
+			$subtotal = $items_subtotal;
+		}
+
+		if ( $tax_rate < 0 ) {
+			$tax_rate = 0;
+		}
+
+		$total = $subtotal + ( $subtotal * ( $tax_rate / 100 ) );
 
 		update_post_meta( $post_id, 'ec_client_id', $client_id );
 		update_post_meta( $post_id, 'ec_operator_id', $operator_id );
@@ -747,6 +811,7 @@ class EC_Core {
 		update_post_meta( $post_id, 'ec_tax_rate', round( $tax_rate, 2 ) );
 		update_post_meta( $post_id, 'ec_total', round( $total, 2 ) );
 		update_post_meta( $post_id, 'ec_terms_conditions', $terms );
+		update_post_meta( $post_id, 'ec_quote_items', $items );
 	}
 
 	/**
@@ -1132,9 +1197,18 @@ class EC_Core {
 		$output = '<ul class="ec-client-list ec-client-quotations">';
 
 		foreach ( $quotations as $quotation ) {
-			$total = get_post_meta( $quotation->ID, 'ec_total', true );
+			$subtotal = (float) get_post_meta( $quotation->ID, 'ec_subtotal', true );
+			$tax_rate = (float) get_post_meta( $quotation->ID, 'ec_tax_rate', true );
+			$total = (float) get_post_meta( $quotation->ID, 'ec_total', true );
 			$valid_until = get_post_meta( $quotation->ID, 'ec_valid_until', true );
-			$output .= '<li><strong>' . esc_html( $quotation->post_title ) . '</strong> - $' . esc_html( number_format_i18n( (float) $total, 2 ) ) . ' - ' . esc_html__( 'Vigencia:', 'electrocam-crm' ) . ' ' . esc_html( $valid_until ) . '</li>';
+			$quote_items = get_post_meta( $quotation->ID, 'ec_quote_items', true );
+			$item_count = is_array( $quote_items ) ? count( $quote_items ) : 0;
+			$output .= '<li><strong>' . esc_html( $quotation->post_title ) . '</strong><br>';
+			$output .= esc_html__( 'Ítems:', 'electrocam-crm' ) . ' ' . esc_html( (string) $item_count ) . ' · ';
+			$output .= esc_html__( 'Subtotal:', 'electrocam-crm' ) . ' $' . esc_html( number_format_i18n( $subtotal, 2 ) ) . ' · ';
+			$output .= esc_html__( 'IVA:', 'electrocam-crm' ) . ' ' . esc_html( number_format_i18n( $tax_rate, 2 ) ) . '% · ';
+			$output .= esc_html__( 'Total:', 'electrocam-crm' ) . ' $' . esc_html( number_format_i18n( $total, 2 ) ) . '<br>';
+			$output .= esc_html__( 'Vigencia:', 'electrocam-crm' ) . ' ' . esc_html( $valid_until ) . '</li>';
 		}
 
 		$output .= '</ul>';
