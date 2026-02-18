@@ -779,6 +779,8 @@ class EC_Core {
 			return;
 		}
 
+		$previous_status = (string) get_post_meta( $post_id, 'ec_quotation_status', true );
+
 		$client_id = isset( $_POST['ec_client_id'] ) ? absint( wp_unslash( $_POST['ec_client_id'] ) ) : 0;
 		$operator_id = isset( $_POST['ec_operator_id'] ) ? absint( wp_unslash( $_POST['ec_operator_id'] ) ) : 0;
 		$issue_date = isset( $_POST['ec_issue_date'] ) ? sanitize_text_field( wp_unslash( $_POST['ec_issue_date'] ) ) : '';
@@ -841,6 +843,11 @@ class EC_Core {
 		update_post_meta( $post_id, 'ec_tax_rate', round( $tax_rate, 2 ) );
 		update_post_meta( $post_id, 'ec_total', round( $total, 2 ) );
 		update_post_meta( $post_id, 'ec_terms_conditions', $terms );
+
+		if ( $previous_status && $previous_status !== $quotation_status ) {
+			$this->append_quotation_status_history( $post_id, $previous_status, $quotation_status, get_current_user_id() );
+		}
+
 		update_post_meta( $post_id, 'ec_quotation_status', $quotation_status );
 		update_post_meta( $post_id, 'ec_quote_items', $items );
 	}
