@@ -588,7 +588,12 @@ class EC_Core {
 			<p><strong><?php esc_html_e( 'Historial de estados (últimos cambios)', 'electrocam-crm' ); ?></strong></p>
 			<ul>
 				<?php foreach ( array_slice( $status_history, -5 ) as $entry ) : ?>
-					<li><?php echo esc_html( isset( $entry['changed_at'] ) ? $entry['changed_at'] : '' ); ?> - <?php echo esc_html( isset( $entry['from'] ) ? $this->get_quotation_status_label( $entry['from'] ) : '' ); ?> → <?php echo esc_html( isset( $entry['to'] ) ? $this->get_quotation_status_label( $entry['to'] ) : '' ); ?> (<?php echo esc_html__( 'Usuario', 'electrocam-crm' ); ?> #<?php echo esc_html( isset( $entry['user_id'] ) ? (string) absint( $entry['user_id'] ) : '0' ); ?>)</li>
+					<li>
+						<?php echo esc_html( isset( $entry['changed_at'] ) ? $entry['changed_at'] : '' ); ?> - <?php echo esc_html( isset( $entry['from'] ) ? $this->get_quotation_status_label( $entry['from'] ) : '' ); ?> → <?php echo esc_html( isset( $entry['to'] ) ? $this->get_quotation_status_label( $entry['to'] ) : '' ); ?> (<?php echo esc_html__( 'Usuario', 'electrocam-crm' ); ?> #<?php echo esc_html( isset( $entry['user_id'] ) ? (string) absint( $entry['user_id'] ) : '0' ); ?>)
+						<?php if ( ! empty( $entry['note'] ) ) : ?>
+							<br><em><?php esc_html_e( 'Nota:', 'electrocam-crm' ); ?> <?php echo esc_html( $entry['note'] ); ?></em>
+						<?php endif; ?>
+					</li>
 				<?php endforeach; ?>
 			</ul>
 		<?php endif; ?>
@@ -1481,11 +1486,16 @@ class EC_Core {
 			$status = get_post_meta( $quotation->ID, 'ec_quotation_status', true );
 			$total = (float) get_post_meta( $quotation->ID, 'ec_total', true );
 			$valid_until = get_post_meta( $quotation->ID, 'ec_valid_until', true );
+			$client_note = get_post_meta( $quotation->ID, 'ec_client_status_note', true );
 
 			$output .= '<li><strong>' . esc_html( $quotation->post_title ) . '</strong><br>';
 			$output .= esc_html__( 'Estado:', 'electrocam-crm' ) . ' ' . esc_html( $this->get_quotation_status_label( $status ? $status : 'draft' ) ) . ' · ';
 			$output .= esc_html__( 'Total:', 'electrocam-crm' ) . ' $' . esc_html( number_format_i18n( $total, 2 ) ) . ' · ';
-			$output .= esc_html__( 'Vigencia:', 'electrocam-crm' ) . ' ' . esc_html( $valid_until ) . '</li>';
+			$output .= esc_html__( 'Vigencia:', 'electrocam-crm' ) . ' ' . esc_html( $valid_until );
+			if ( ! empty( $client_note ) ) {
+				$output .= '<br><em>' . esc_html__( 'Nota cliente:', 'electrocam-crm' ) . ' ' . esc_html( $client_note ) . '</em>';
+			}
+			$output .= '</li>';
 		}
 		$output .= '</ul>';
 
