@@ -76,6 +76,7 @@ class EC_Core {
 		add_action( 'admin_notices', array( $this, 'render_admin_notices' ) );
 		add_action( 'admin_menu', array( $this, 'register_settings_page' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
+		add_action( 'admin_notices', array( $this, 'render_settings_errors_notice' ) );
 		add_shortcode( 'ec_client_orders', array( $this, 'render_client_orders_shortcode' ) );
 		add_shortcode( 'ec_client_quotations', array( $this, 'render_client_quotations_shortcode' ) );
 		add_shortcode( 'ec_client_appointments', array( $this, 'render_client_appointments_shortcode' ) );
@@ -885,7 +886,7 @@ class EC_Core {
 			'ec_notification_cc_email',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => 'sanitize_email',
+				'sanitize_callback' => array( $this, 'sanitize_optional_notification_email' ),
 				'default'           => '',
 			)
 		);
@@ -925,6 +926,48 @@ class EC_Core {
 			</form>
 		</div>
 		<?php
+	}
+
+
+	/**
+	 * Sanitiza correo opcional de notificación.
+	 *
+	 * @param string $value Valor recibido.
+	 * @return string
+	 */
+	public function sanitize_optional_notification_email( $value ) {
+		$value = is_string( $value ) ? trim( $value ) : '';
+
+		if ( '' === $value ) {
+			return '';
+		}
+
+		$sanitized = sanitize_email( $value );
+		if ( empty( $sanitized ) ) {
+			add_settings_error(
+				'ec_notification_cc_email',
+				'ec_notification_cc_email_invalid',
+				__( 'El correo secundario (CC) no es válido y no se guardó.', 'electrocam-crm' ),
+				'error'
+			);
+			return '';
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Renderiza mensajes de settings del plugin.
+	 *
+	 * @return void
+	 */
+	public function render_settings_errors_notice() {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen || 'settings_page_electrocam-crm-settings' !== $screen->id ) {
+			return;
+		}
+
+		settings_errors();
 	}
 
 	/**
