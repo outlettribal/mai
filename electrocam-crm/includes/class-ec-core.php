@@ -987,6 +987,7 @@ class EC_Core {
 				$output .= '<button type="submit">' . esc_html__( 'Solicitar cambio', 'electrocam-crm' ) . '</button>';
 				$output .= '</form>';
 			}
+			$output .= $this->render_frontend_reschedule_history_html( $appointment->ID, 3 );
 			$output .= '</li>';
 		}
 
@@ -1119,6 +1120,7 @@ class EC_Core {
 				$output .= '<button type="submit">' . esc_html__( 'Reprogramar', 'electrocam-crm' ) . '</button>';
 				$output .= '</form>';
 			}
+			$output .= $this->render_frontend_reschedule_history_html( $appointment->ID, 3 );
 			$output .= '</li>';
 		}
 		$output .= '</ul>';
@@ -1263,6 +1265,34 @@ class EC_Core {
 		return false !== $timestamp;
 	}
 
+
+	/**
+	 * Renderiza historial breve para frontend.
+	 *
+	 * @param int $appointment_id ID de cita.
+	 * @param int $limit          Máximo de registros.
+	 * @return string
+	 */
+	private function render_frontend_reschedule_history_html( $appointment_id, $limit = 3 ) {
+		$history = get_post_meta( $appointment_id, 'ec_reschedule_history', true );
+
+		if ( ! is_array( $history ) || empty( $history ) ) {
+			return '';
+		}
+
+		$history = array_slice( array_reverse( $history ), 0, absint( $limit ) );
+		$output = '<details class="ec-reschedule-history"><summary>' . esc_html__( 'Ver historial de cambios', 'electrocam-crm' ) . '</summary><ul>';
+		foreach ( $history as $item ) {
+			$from = isset( $item['from'] ) ? $item['from'] : '';
+			$to = isset( $item['to'] ) ? $item['to'] : '';
+			$changed_at = isset( $item['changed_at'] ) ? $item['changed_at'] : '';
+			$output .= '<li>' . esc_html( sprintf( __( 'De %1$s a %2$s (%3$s)', 'electrocam-crm' ), $from, $to, $changed_at ) ) . '</li>';
+		}
+		$output .= '</ul></details>';
+
+		return $output;
+	}
+
 	/**
 	 * Envía correo al cliente y soporte cuando una cita se reprograma.
 	 *
@@ -1294,13 +1324,17 @@ class EC_Core {
 		$subject = __( 'Cita reprogramada - Electrocam', 'electrocam-crm' );
 		$message = sprintf(
 			/* translators: 1: appointment ID, 2: date, 3: time */
-			__( 'La cita #%1$d fue reprogramada para %2$s a las %3$s.', 'electrocam-crm' ),
+			__( '<p>La cita <strong>#%1$d</strong> fue reprogramada para <strong>%2$s</strong> a las <strong>%3$s</strong>.</p>', 'electrocam-crm' ),
 			$appointment_id,
 			$new_date,
 			$new_time
 		);
+		$headers = array( 'Content-Type: text/html; charset=UTF-8' );
 
-		wp_mail( $recipients, $subject, $message );
+		$sent = wp_mail( $recipients, $subject, $message, $headers );
+		if ( $sent ) {
+			update_post_meta( $appointment_id, 'ec_last_reschedule_email_sent_at', gmdate( 'Y-m-d H:i:s' ) );
+		}
 	}
 
 	/**
