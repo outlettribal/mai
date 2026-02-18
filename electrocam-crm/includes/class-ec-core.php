@@ -1450,8 +1450,16 @@ class EC_Core {
 	 *
 	 * @return string
 	 */
-	public function render_operator_quotations_shortcode() {
+	public function render_operator_quotations_shortcode( $atts = array() ) {
 		$current_user_id = get_current_user_id();
+		$atts = shortcode_atts(
+			array(
+				'status' => '',
+				'show_expired' => 'yes',
+			),
+			$atts,
+			'ec_operator_quotations'
+		);
 
 		if ( ! $current_user_id ) {
 			return '<p>' . esc_html__( 'Debes iniciar sesión para ver tus cotizaciones asignadas.', 'electrocam-crm' ) . '</p>';
@@ -1459,6 +1467,13 @@ class EC_Core {
 
 		if ( ! current_user_can( 'edit_ec_quotations' ) ) {
 			return '<p>' . esc_html__( 'No tienes permisos de operario para ver esta información.', 'electrocam-crm' ) . '</p>';
+		}
+
+		$filter_status = sanitize_key( (string) $atts['status'] );
+		$show_expired = 'no' !== strtolower( (string) $atts['show_expired'] );
+		$allowed_filter_statuses = array( 'draft', 'sent', 'approved', 'rejected', 'expired' );
+		if ( $filter_status && ! in_array( $filter_status, $allowed_filter_statuses, true ) ) {
+			$filter_status = '';
 		}
 
 		$quotations = get_posts(
@@ -1482,12 +1497,26 @@ class EC_Core {
 		}
 
 		$output = '<ul class="ec-operator-list ec-operator-quotations">';
+		$has_results = false;
 		foreach ( $quotations as $quotation ) {
 			$status = get_post_meta( $quotation->ID, 'ec_quotation_status', true );
 			$total = (float) get_post_meta( $quotation->ID, 'ec_total', true );
 			$valid_until = get_post_meta( $quotation->ID, 'ec_valid_until', true );
 			$client_note = get_post_meta( $quotation->ID, 'ec_client_status_note', true );
+			$valid_timestamp = $valid_until ? strtotime( $valid_until . ' 23:59:59' ) : false;
+			if ( $valid_timestamp && $valid_timestamp < current_time( 'timestamp' ) && ! in_array( $status, array( 'approved', 'rejected' ), true ) ) {
+				$status = 'expired';
+			}
 
+			if ( ! $show_expired && 'expired' === $status ) {
+				continue;
+			}
+
+			if ( $filter_status && $filter_status !== $status ) {
+				continue;
+			}
+
+			$has_results = true;
 			$output .= '<li><strong>' . esc_html( $quotation->post_title ) . '</strong><br>';
 			$output .= esc_html__( 'Estado:', 'electrocam-crm' ) . ' ' . esc_html( $this->get_quotation_status_label( $status ? $status : 'draft' ) ) . ' · ';
 			$output .= esc_html__( 'Total:', 'electrocam-crm' ) . ' $' . esc_html( number_format_i18n( $total, 2 ) ) . ' · ';
@@ -1498,6 +1527,10 @@ class EC_Core {
 			$output .= '</li>';
 		}
 		$output .= '</ul>';
+
+		if ( ! $has_results ) {
+			return '<p>' . esc_html__( 'No hay cotizaciones para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
+		}
 
 		return $output;
 	}

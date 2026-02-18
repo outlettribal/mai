@@ -58,6 +58,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 36. Trazabilidad de cambios de estado también desde edición en wp-admin (no solo desde portal cliente).
 37. Captura de comentario opcional del cliente al aprobar/rechazar cotización y envío en notificación por correo.
 38. Visualización de notas de cliente en historial de estados (admin) y en listado de cotizaciones del operario.
+39. Filtros por estado y vencimiento también en shortcode de cotizaciones de operario (`[ec_operator_quotations status="..."]`, `show_expired`).
 
 ## Estructura
 
@@ -90,9 +91,9 @@ electrocam-crm/
 
 - Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **97%**
 - Módulo de órdenes de servicio (metabox, guardado, consecutivo, cita de control): **70%**
-- Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **96%**
+- Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **97%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **90%**
-- Portal cliente frontend (shortcodes + acciones de cita + acciones de cotización): **87%**
+- Portal cliente/frontend operativo (shortcodes + acciones + filtros): **89%**
 - PDF y correo automático: **10%**
 - Conversación/comentarios y notificaciones: **79%**
