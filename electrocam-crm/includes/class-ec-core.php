@@ -1592,6 +1592,7 @@ class EC_Core {
 
 		update_post_meta( $quotation_id, 'ec_quotation_status', $new_status );
 		update_post_meta( $quotation_id, 'ec_client_status_updated_at', gmdate( 'Y-m-d H:i:s' ) );
+		$this->send_quotation_status_update_email( $quotation_id, $new_status );
 
 		wp_safe_redirect( add_query_arg( 'ec_quotation_updated', '1', $redirect_url ) );
 		exit;
@@ -1615,6 +1616,67 @@ class EC_Core {
 		}
 
 		return '';
+	}
+
+
+	/**
+	 * Envía notificación cuando cliente aprueba/rechaza una cotización.
+	 *
+	 * @param int    $quotation_id ID de cotización.
+	 * @param string $new_status   Nuevo estado.
+	 * @return void
+	 */
+	private function send_quotation_status_update_email( $quotation_id, $new_status ) {
+		$client_id = (int) get_post_meta( $quotation_id, 'ec_client_id', true );
+		$operator_id = (int) get_post_meta( $quotation_id, 'ec_operator_id', true );
+		$recipients = array();
+
+		$client = $client_id ? get_user_by( 'id', $client_id ) : false;
+		$operator = $operator_id ? get_user_by( 'id', $operator_id ) : false;
+
+		if ( $client && ! empty( $client->user_email ) ) {
+			$recipients[] = $client->user_email;
+		}
+
+		if ( $operator && ! empty( $operator->user_email ) ) {
+			$recipients[] = $operator->user_email;
+		}
+
+		$support_email = $this->get_support_email();
+		if ( ! empty( $support_email ) ) {
+			$recipients[] = $support_email;
+		}
+
+		$admin_email = get_option( 'admin_email' );
+		if ( ! empty( $admin_email ) ) {
+			$recipients[] = $admin_email;
+		}
+
+		$cc_email = $this->get_notification_cc_email();
+		if ( ! empty( $cc_email ) ) {
+			$recipients[] = $cc_email;
+		}
+
+		$recipients = array_unique( array_filter( $recipients ) );
+		if ( empty( $recipients ) ) {
+			return;
+		}
+
+		$status_label = $this->get_quotation_status_label( $new_status );
+		$subject = __( 'Actualización de estado de cotización', 'electrocam-crm' );
+		$message = sprintf(
+			/* translators: 1: quotation title, 2: status label */
+			__( "La cotización '%1$s' cambió a estado: %2$s.", 'electrocam-crm' ),
+			get_the_title( $quotation_id ),
+			$status_label
+		);
+
+		$sent = wp_mail( $recipients, $subject, $message );
+		if ( $sent ) {
+			$sent_at = gmdate( 'Y-m-d H:i:s' );
+			update_post_meta( $quotation_id, 'ec_last_quotation_status_email_sent_at', $sent_at );
+			$this->append_email_audit( $quotation_id, 'quotation_status_changed', $recipients, $subject, $sent_at );
+		}
 	}
 
 	/**
