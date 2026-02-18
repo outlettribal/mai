@@ -1346,12 +1346,23 @@ class EC_Core {
 			return $message . '<p>' . esc_html__( 'No hay cotizaciones para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
 		}
 
+		$pagination_base_args = array(
+			'ecq_client_page' => $page,
+			'status' => $filter_status,
+			'show_expired' => $show_expired ? 'yes' : 'no',
+			'limit' => $limit,
+		);
+
 		$pagination_links = array();
 		if ( $page > 1 ) {
-			$pagination_links[] = '<a href="' . esc_url( add_query_arg( 'ecq_client_page', $page - 1 ) ) . '">' . esc_html__( 'Anterior', 'electrocam-crm' ) . '</a>';
+			$previous_args = $pagination_base_args;
+			$previous_args['ecq_client_page'] = $page - 1;
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( $previous_args ) ) . '">' . esc_html__( 'Anterior', 'electrocam-crm' ) . '</a>';
 		}
 		if ( $has_more ) {
-			$pagination_links[] = '<a href="' . esc_url( add_query_arg( 'ecq_client_page', $page + 1 ) ) . '">' . esc_html__( 'Siguiente', 'electrocam-crm' ) . '</a>';
+			$next_args = $pagination_base_args;
+			$next_args['ecq_client_page'] = $page + 1;
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( $next_args ) ) . '">' . esc_html__( 'Siguiente', 'electrocam-crm' ) . '</a>';
 		}
 		if ( ! empty( $pagination_links ) ) {
 			$output .= '<p class="ec-pagination-links">' . implode( ' | ', $pagination_links ) . '</p>';
@@ -1573,12 +1584,23 @@ class EC_Core {
 			return '<p>' . esc_html__( 'No hay cotizaciones para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
 		}
 
+		$pagination_base_args = array(
+			'ecq_operator_page' => $page,
+			'status' => $filter_status,
+			'show_expired' => $show_expired ? 'yes' : 'no',
+			'limit' => $limit,
+		);
+
 		$pagination_links = array();
 		if ( $page > 1 ) {
-			$pagination_links[] = '<a href="' . esc_url( add_query_arg( 'ecq_operator_page', $page - 1 ) ) . '">' . esc_html__( 'Anterior', 'electrocam-crm' ) . '</a>';
+			$previous_args = $pagination_base_args;
+			$previous_args['ecq_operator_page'] = $page - 1;
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( $previous_args ) ) . '">' . esc_html__( 'Anterior', 'electrocam-crm' ) . '</a>';
 		}
 		if ( $has_more ) {
-			$pagination_links[] = '<a href="' . esc_url( add_query_arg( 'ecq_operator_page', $page + 1 ) ) . '">' . esc_html__( 'Siguiente', 'electrocam-crm' ) . '</a>';
+			$next_args = $pagination_base_args;
+			$next_args['ecq_operator_page'] = $page + 1;
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( $next_args ) ) . '">' . esc_html__( 'Siguiente', 'electrocam-crm' ) . '</a>';
 		}
 		if ( ! empty( $pagination_links ) ) {
 			$output .= '<p class="ec-pagination-links">' . implode( ' | ', $pagination_links ) . '</p>';

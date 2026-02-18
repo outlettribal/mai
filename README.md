@@ -63,6 +63,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 41. Parámetro `page` en shortcodes de cotizaciones de cliente y operario para paginación simple por offset.
 42. Navegación básica Anterior/Siguiente por query args (`ecq_client_page`, `ecq_operator_page`) en listados de cotizaciones.
 43. Paginación cliente/operario ajustada para detectar correctamente página siguiente (`limit + 1`).
+44. Navegación de paginación conserva filtros activos (`status`, `show_expired`, `limit`) en cliente y operario.
 
 ## Estructura
 
@@ -98,6 +99,6 @@ electrocam-crm/
 - Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **99%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **90%**
-- Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **94%**
+- Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **95%**
 - PDF y correo automático: **10%**
 - Conversación/comentarios y notificaciones: **79%**
