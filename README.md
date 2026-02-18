@@ -39,6 +39,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 17. Notificación por correo en reprogramaciones y en nuevos comentarios de órdenes de servicio.
 18. Historial de reprogramaciones de citas guardado en metadatos y visible en administración.
 19. Reprogramación de citas también disponible para operarios desde frontend, con nonce, permisos y trazabilidad.
+20. Validación de formato fecha/hora y feedback unificado para reprogramaciones en portales cliente/operario.
 
 ## Estructura
 
@@ -73,7 +74,7 @@ electrocam-crm/
 - Módulo de órdenes de servicio (metabox, guardado, consecutivo, cita de control): **70%**
 - Módulo de cotizaciones (metabox + totales básicos): **45%**
 - Módulo de inventario (metabox + persistencia): **40%**
-- Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **80%**
+- Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **83%**
 - Portal cliente frontend (shortcodes listados + reprogramación inicial): **64%**
 - PDF y correo automático: **10%**
-- Conversación/comentarios y notificaciones: **42%**
+- Conversación/comentarios y notificaciones: **44%**

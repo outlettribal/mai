@@ -947,12 +947,7 @@ class EC_Core {
 			return '<p>' . esc_html__( 'Debes iniciar sesión para ver tus citas.', 'electrocam-crm' ) . '</p>';
 		}
 
-		$message = '';
-		if ( isset( $_GET['ec_appointment_updated'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['ec_appointment_updated'] ) ) ) {
-			$message = '<p class="ec-success-message">' . esc_html__( 'La cita fue reprogramada exitosamente.', 'electrocam-crm' ) . '</p>';
-		} elseif ( isset( $_GET['ec_appointment_error'] ) && 'slot_unavailable' === sanitize_text_field( wp_unslash( $_GET['ec_appointment_error'] ) ) ) {
-			$message = '<p class="ec-error-message">' . esc_html__( 'El horario seleccionado ya está ocupado. Intenta otro.', 'electrocam-crm' ) . '</p>';
-		}
+		$message = $this->get_reschedule_feedback_message();
 
 		$appointments = get_posts(
 			array(
@@ -1065,6 +1060,8 @@ class EC_Core {
 			return '<p>' . esc_html__( 'No tienes permisos de operario para ver esta información.', 'electrocam-crm' ) . '</p>';
 		}
 
+		$message = $this->get_reschedule_feedback_message();
+
 		$service_orders = get_posts(
 			array(
 				'post_type'      => 'service_order',
@@ -1081,7 +1078,7 @@ class EC_Core {
 		);
 
 		if ( empty( $service_orders ) ) {
-			return '<p>' . esc_html__( 'No tienes citas asignadas.', 'electrocam-crm' ) . '</p>';
+			return $message . '<p>' . esc_html__( 'No tienes citas asignadas.', 'electrocam-crm' ) . '</p>';
 		}
 
 		$appointments = get_posts(
@@ -1102,10 +1099,11 @@ class EC_Core {
 		);
 
 		if ( empty( $appointments ) ) {
-			return '<p>' . esc_html__( 'No tienes citas asignadas.', 'electrocam-crm' ) . '</p>';
+			return $message . '<p>' . esc_html__( 'No tienes citas asignadas.', 'electrocam-crm' ) . '</p>';
 		}
 
-		$output = '<ul class="ec-operator-list ec-operator-appointments">';
+		$output = $message;
+		$output .= '<ul class="ec-operator-list ec-operator-appointments">';
 		foreach ( $appointments as $appointment ) {
 			$date = get_post_meta( $appointment->ID, 'ec_appointment_date', true );
 			$time = get_post_meta( $appointment->ID, 'ec_appointment_time', true );
@@ -1158,6 +1156,11 @@ class EC_Core {
 			wp_die( esc_html__( 'No tienes permisos para modificar esta cita.', 'electrocam-crm' ) );
 		}
 
+		if ( ! $this->is_valid_date_time( $new_date, $new_time ) ) {
+			wp_safe_redirect( add_query_arg( 'ec_appointment_error', 'invalid_datetime', $redirect_url ) );
+			exit;
+		}
+
 		if ( ! $this->is_appointment_slot_available( $new_date, $new_time, $appointment_id ) ) {
 			wp_safe_redirect( add_query_arg( 'ec_appointment_error', 'slot_unavailable', $redirect_url ) );
 			exit;
@@ -1204,6 +1207,11 @@ class EC_Core {
 			wp_die( esc_html__( 'No tienes permisos para modificar esta cita.', 'electrocam-crm' ) );
 		}
 
+		if ( ! $this->is_valid_date_time( $new_date, $new_time ) ) {
+			wp_safe_redirect( add_query_arg( 'ec_appointment_error', 'invalid_datetime', $redirect_url ) );
+			exit;
+		}
+
 		if ( ! $this->is_appointment_slot_available( $new_date, $new_time, $appointment_id ) ) {
 			wp_safe_redirect( add_query_arg( 'ec_appointment_error', 'slot_unavailable', $redirect_url ) );
 			exit;
@@ -1222,6 +1230,46 @@ class EC_Core {
 		exit;
 	}
 
+
+
+	/**
+	 * Construye mensaje de feedback para reprogramaciones.
+	 *
+	 * @return string
+	 */
+	private function get_reschedule_feedback_message() {
+		if ( isset( $_GET['ec_appointment_updated'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['ec_appointment_updated'] ) ) ) {
+			return '<p class="ec-success-message">' . esc_html__( 'La cita fue reprogramada exitosamente.', 'electrocam-crm' ) . '</p>';
+		}
+
+		if ( isset( $_GET['ec_appointment_error'] ) ) {
+			$error = sanitize_text_field( wp_unslash( $_GET['ec_appointment_error'] ) );
+			if ( 'slot_unavailable' === $error ) {
+				return '<p class="ec-error-message">' . esc_html__( 'El horario seleccionado ya está ocupado. Intenta otro.', 'electrocam-crm' ) . '</p>';
+			}
+			if ( 'invalid_datetime' === $error ) {
+				return '<p class="ec-error-message">' . esc_html__( 'La fecha u hora enviada no es válida.', 'electrocam-crm' ) . '</p>';
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Valida formato de fecha y hora de cita.
+	 *
+	 * @param string $date Fecha.
+	 * @param string $time Hora.
+	 * @return bool
+	 */
+	private function is_valid_date_time( $date, $time ) {
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) || ! preg_match( '/^\d{2}:\d{2}$/', $time ) ) {
+			return false;
+		}
+
+		$timestamp = strtotime( $date . ' ' . $time . ':00' );
+		return false !== $timestamp;
+	}
 
 	/**
 	 * Envía correo al cliente y soporte cuando una cita se reprograma.
