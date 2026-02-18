@@ -1170,6 +1170,7 @@ class EC_Core {
 			array(
 				'limit' => 20,
 				'page' => 1,
+				'status' => '',
 			),
 			$atts,
 			'ec_client_orders'
@@ -1189,6 +1190,24 @@ class EC_Core {
 			$page = max( 1, absint( wp_unslash( $_GET['eco_client_page'] ) ) );
 		}
 		$offset = ( $page - 1 ) * $limit;
+		$filter_status = sanitize_key( (string) $atts['status'] );
+		$allowed_statuses = array( 'pending', 'in_progress', 'completed' );
+		if ( $filter_status && ! in_array( $filter_status, $allowed_statuses, true ) ) {
+			$filter_status = '';
+		}
+
+		$meta_query = array(
+			array(
+				'key'   => 'ec_client_id',
+				'value' => $current_user_id,
+			),
+		);
+		if ( $filter_status ) {
+			$meta_query[] = array(
+				'key'   => 'ec_status',
+				'value' => $filter_status,
+			);
+		}
 
 		$orders = get_posts(
 			array(
@@ -1198,16 +1217,14 @@ class EC_Core {
 				'offset'         => $offset,
 				'orderby'        => 'date',
 				'order'          => 'DESC',
-				'meta_query'     => array(
-					array(
-						'key'   => 'ec_client_id',
-						'value' => $current_user_id,
-					),
-				),
+				'meta_query'     => $meta_query,
 			)
 		);
 
 		if ( empty( $orders ) ) {
+			if ( $filter_status ) {
+				return '<p>' . esc_html__( 'No hay órdenes para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
+			}
 			return '<p>' . esc_html__( 'No tienes órdenes registradas.', 'electrocam-crm' ) . '</p>';
 		}
 
@@ -1230,6 +1247,7 @@ class EC_Core {
 		$pagination_base_args = array(
 			'eco_client_page' => $page,
 			'limit' => $limit,
+			'status' => $filter_status,
 		);
 
 		$pagination_links = array();
@@ -1484,6 +1502,7 @@ class EC_Core {
 			array(
 				'limit' => 20,
 				'page' => 1,
+				'status' => '',
 			),
 			$atts,
 			'ec_operator_orders'
@@ -1503,6 +1522,24 @@ class EC_Core {
 			$page = max( 1, absint( wp_unslash( $_GET['eco_operator_page'] ) ) );
 		}
 		$offset = ( $page - 1 ) * $limit;
+		$filter_status = sanitize_key( (string) $atts['status'] );
+		$allowed_statuses = array( 'pending', 'in_progress', 'completed' );
+		if ( $filter_status && ! in_array( $filter_status, $allowed_statuses, true ) ) {
+			$filter_status = '';
+		}
+
+		$meta_query = array(
+			array(
+				'key'   => 'ec_operator_id',
+				'value' => $current_user_id,
+			),
+		);
+		if ( $filter_status ) {
+			$meta_query[] = array(
+				'key'   => 'ec_status',
+				'value' => $filter_status,
+			);
+		}
 
 		$orders = get_posts(
 			array(
@@ -1512,16 +1549,14 @@ class EC_Core {
 				'offset'         => $offset,
 				'orderby'        => 'date',
 				'order'          => 'DESC',
-				'meta_query'     => array(
-					array(
-						'key'   => 'ec_operator_id',
-						'value' => $current_user_id,
-					),
-				),
+				'meta_query'     => $meta_query,
 			)
 		);
 
 		if ( empty( $orders ) ) {
+			if ( $filter_status ) {
+				return '<p>' . esc_html__( 'No hay órdenes para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
+			}
 			return '<p>' . esc_html__( 'No tienes órdenes asignadas.', 'electrocam-crm' ) . '</p>';
 		}
 
@@ -1542,6 +1577,7 @@ class EC_Core {
 		$pagination_base_args = array(
 			'eco_operator_page' => $page,
 			'limit' => $limit,
+			'status' => $filter_status,
 		);
 
 		$pagination_links = array();
