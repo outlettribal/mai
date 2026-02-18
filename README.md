@@ -42,6 +42,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 20. Validación de formato fecha/hora y feedback unificado para reprogramaciones en portales cliente/operario.
 21. Flujo de reprogramación refactorizado en un método compartido para cliente y operario.
 22. Historial breve visible en frontend (cliente/operario) y auditoría de envío de correo de reprogramación.
+23. Correo de soporte configurable (`ec_support_email`) con fallback a `servicioalcliente@electrocam.com` y auditoría de envíos por post.
 
 ## Estructura
 
@@ -72,11 +73,11 @@ electrocam-crm/
 
 ## Avance estimado del proyecto
 
-- Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **85%**
+- Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **87%**
 - Módulo de órdenes de servicio (metabox, guardado, consecutivo, cita de control): **70%**
 - Módulo de cotizaciones (metabox + totales básicos): **45%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **88%**
 - Portal cliente frontend (shortcodes listados + reprogramación inicial): **68%**
 - PDF y correo automático: **10%**
-- Conversación/comentarios y notificaciones: **48%**
+- Conversación/comentarios y notificaciones: **55%**

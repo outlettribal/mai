@@ -40,6 +40,9 @@ class EC_Core {
 		self::register_roles();
 		self::register_post_types_static();
 		self::register_taxonomies_static();
+		if ( ! get_option( 'ec_support_email' ) ) {
+			update_option( 'ec_support_email', 'servicioalcliente@electrocam.com' );
+		}
 		flush_rewrite_rules();
 	}
 
@@ -1310,7 +1313,7 @@ class EC_Core {
 			$recipients[] = $client->user_email;
 		}
 
-		$support_email = get_option( 'admin_email' );
+		$support_email = $this->get_support_email();
 		if ( ! empty( $support_email ) ) {
 			$recipients[] = $support_email;
 		}
@@ -1333,8 +1336,53 @@ class EC_Core {
 
 		$sent = wp_mail( $recipients, $subject, $message, $headers );
 		if ( $sent ) {
-			update_post_meta( $appointment_id, 'ec_last_reschedule_email_sent_at', gmdate( 'Y-m-d H:i:s' ) );
+			$sent_at = gmdate( 'Y-m-d H:i:s' );
+			update_post_meta( $appointment_id, 'ec_last_reschedule_email_sent_at', $sent_at );
+			$this->append_email_audit( $appointment_id, 'appointment_rescheduled', $recipients, $subject, $sent_at );
 		}
+	}
+
+
+	/**
+	 * Obtiene el correo de soporte configurado.
+	 *
+	 * @return string
+	 */
+	private function get_support_email() {
+		$support_email = get_option( 'ec_support_email', 'servicioalcliente@electrocam.com' );
+		$support_email = is_string( $support_email ) ? sanitize_email( $support_email ) : '';
+
+		if ( empty( $support_email ) ) {
+			$support_email = 'servicioalcliente@electrocam.com';
+		}
+
+		return $support_email;
+	}
+
+	/**
+	 * Registra auditoría de envío de correo en el post asociado.
+	 *
+	 * @param int    $post_id     ID del post.
+	 * @param string $event       Evento de correo.
+	 * @param array  $recipients  Destinatarios.
+	 * @param string $subject     Asunto.
+	 * @param string $sent_at     Fecha/hora envío.
+	 * @return void
+	 */
+	private function append_email_audit( $post_id, $event, $recipients, $subject, $sent_at ) {
+		$audit = get_post_meta( $post_id, 'ec_email_audit', true );
+		if ( ! is_array( $audit ) ) {
+			$audit = array();
+		}
+
+		$audit[] = array(
+			'event'      => sanitize_key( $event ),
+			'recipients' => array_values( array_map( 'sanitize_email', (array) $recipients ) ),
+			'subject'    => sanitize_text_field( $subject ),
+			'sent_at'    => sanitize_text_field( $sent_at ),
+		);
+
+		update_post_meta( $post_id, 'ec_email_audit', $audit );
 	}
 
 	/**
@@ -1397,6 +1445,10 @@ class EC_Core {
 			$recipients[] = $operator->user_email;
 		}
 
+		$support_email = $this->get_support_email();
+		if ( ! empty( $support_email ) ) {
+			$recipients[] = $support_email;
+		}
 		$admin_email = get_option( 'admin_email' );
 		if ( ! empty( $admin_email ) ) {
 			$recipients[] = $admin_email;
@@ -1422,7 +1474,10 @@ class EC_Core {
 			$comment->comment_content
 		);
 
-		wp_mail( $recipients, $subject, $message );
+		$sent = wp_mail( $recipients, $subject, $message );
+		if ( $sent ) {
+			$this->append_email_audit( $post_id, 'service_order_comment', $recipients, $subject, gmdate( 'Y-m-d H:i:s' ) );
+		}
 	}
 
 	/**
