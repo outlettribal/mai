@@ -85,6 +85,7 @@ class EC_Core {
 		add_shortcode( 'ec_client_appointments', array( $this, 'render_client_appointments_shortcode' ) );
 		add_shortcode( 'ec_operator_orders', array( $this, 'render_operator_orders_shortcode' ) );
 		add_shortcode( 'ec_operator_appointments', array( $this, 'render_operator_appointments_shortcode' ) );
+		add_shortcode( 'ec_operator_quotations', array( $this, 'render_operator_quotations_shortcode' ) );
 		add_action( 'admin_post_ec_client_reschedule_appointment', array( $this, 'handle_client_reschedule_appointment' ) );
 		add_action( 'admin_post_ec_operator_reschedule_appointment', array( $this, 'handle_operator_reschedule_appointment' ) );
 		add_action( 'comment_post', array( $this, 'notify_service_order_comment' ), 10, 3 );
@@ -1175,6 +1176,7 @@ class EC_Core {
 
 		$output .= '</ul>';
 
+
 		return $output;
 	}
 
@@ -1201,11 +1203,27 @@ class EC_Core {
 	 *
 	 * @return string
 	 */
-	public function render_client_quotations_shortcode() {
+	public function render_client_quotations_shortcode( $atts = array() ) {
 		$current_user_id = get_current_user_id();
+		$atts = shortcode_atts(
+			array(
+				'status' => '',
+				'show_expired' => 'yes',
+			),
+			$atts,
+			'ec_client_quotations'
+		);
 
 		if ( ! $current_user_id ) {
 			return '<p>' . esc_html__( 'Debes iniciar sesión para ver tus cotizaciones.', 'electrocam-crm' ) . '</p>';
+		}
+
+		$filter_status = sanitize_key( (string) $atts['status'] );
+		$show_expired = 'no' !== strtolower( (string) $atts['show_expired'] );
+
+		$allowed_filter_statuses = array( 'draft', 'sent', 'approved', 'rejected', 'expired' );
+		if ( $filter_status && ! in_array( $filter_status, $allowed_filter_statuses, true ) ) {
+			$filter_status = '';
 		}
 
 		$quotations = get_posts(
@@ -1229,6 +1247,7 @@ class EC_Core {
 		}
 
 		$output = '<ul class="ec-client-list ec-client-quotations">';
+		$has_results = false;
 
 		foreach ( $quotations as $quotation ) {
 			$subtotal = (float) get_post_meta( $quotation->ID, 'ec_subtotal', true );
@@ -1243,6 +1262,15 @@ class EC_Core {
 				$status = 'expired';
 			}
 
+			if ( ! $show_expired && 'expired' === $status ) {
+				continue;
+			}
+
+			if ( $filter_status && $filter_status !== $status ) {
+				continue;
+			}
+
+			$has_results = true;
 			$output .= '<li><strong>' . esc_html( $quotation->post_title ) . '</strong><br>';
 			$output .= esc_html__( 'Estado:', 'electrocam-crm' ) . ' ' . esc_html( $this->get_quotation_status_label( $status ? $status : 'draft' ) ) . '<br>';
 			$output .= esc_html__( 'Ítems:', 'electrocam-crm' ) . ' ' . esc_html( (string) $item_count ) . ' · ';
@@ -1253,6 +1281,10 @@ class EC_Core {
 		}
 
 		$output .= '</ul>';
+
+		if ( ! $has_results ) {
+			return '<p>' . esc_html__( 'No hay cotizaciones para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
+		}
 
 		return $output;
 	}
@@ -1361,6 +1393,59 @@ class EC_Core {
 			$status = get_post_meta( $order->ID, 'ec_status', true );
 			$service_date = get_post_meta( $order->ID, 'ec_service_date', true );
 			$output .= '<li><strong>' . esc_html( $order_number ? $order_number : $order->post_title ) . '</strong> - ' . esc_html( $service_date ) . ' - ' . esc_html( $status ) . '</li>';
+		}
+		$output .= '</ul>';
+
+		return $output;
+	}
+
+
+	/**
+	 * Renderiza cotizaciones asignadas al operario autenticado.
+	 *
+	 * @return string
+	 */
+	public function render_operator_quotations_shortcode() {
+		$current_user_id = get_current_user_id();
+
+		if ( ! $current_user_id ) {
+			return '<p>' . esc_html__( 'Debes iniciar sesión para ver tus cotizaciones asignadas.', 'electrocam-crm' ) . '</p>';
+		}
+
+		if ( ! current_user_can( 'edit_ec_quotations' ) ) {
+			return '<p>' . esc_html__( 'No tienes permisos de operario para ver esta información.', 'electrocam-crm' ) . '</p>';
+		}
+
+		$quotations = get_posts(
+			array(
+				'post_type'      => 'quotation',
+				'post_status'    => array( 'publish', 'private' ),
+				'posts_per_page' => 50,
+				'orderby'        => 'date',
+				'order'          => 'DESC',
+				'meta_query'     => array(
+					array(
+						'key'   => 'ec_operator_id',
+						'value' => $current_user_id,
+					),
+				),
+			)
+		);
+
+		if ( empty( $quotations ) ) {
+			return '<p>' . esc_html__( 'No tienes cotizaciones asignadas.', 'electrocam-crm' ) . '</p>';
+		}
+
+		$output = '<ul class="ec-operator-list ec-operator-quotations">';
+		foreach ( $quotations as $quotation ) {
+			$status = get_post_meta( $quotation->ID, 'ec_quotation_status', true );
+			$total = (float) get_post_meta( $quotation->ID, 'ec_total', true );
+			$valid_until = get_post_meta( $quotation->ID, 'ec_valid_until', true );
+
+			$output .= '<li><strong>' . esc_html( $quotation->post_title ) . '</strong><br>';
+			$output .= esc_html__( 'Estado:', 'electrocam-crm' ) . ' ' . esc_html( $this->get_quotation_status_label( $status ? $status : 'draft' ) ) . ' · ';
+			$output .= esc_html__( 'Total:', 'electrocam-crm' ) . ' $' . esc_html( number_format_i18n( $total, 2 ) ) . ' · ';
+			$output .= esc_html__( 'Vigencia:', 'electrocam-crm' ) . ' ' . esc_html( $valid_until ) . '</li>';
 		}
 		$output .= '</ul>';
 

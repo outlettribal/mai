@@ -51,6 +51,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 29. Ítems de cotización estructurados (nombre, descripción, cantidad y valor unitario) con recálculo automático de subtotal/total e IVA al guardar.
 30. Mejor visibilidad de cotizaciones en portal cliente mostrando cantidad de ítems, subtotal, IVA y total.
 31. Flujo básico de estado de cotización (borrador, enviada, aprobada, rechazada) con detección de vencimiento en portal cliente según vigencia.
+32. Shortcode de cotizaciones para operario (`[ec_operator_quotations]`) y filtros básicos en portal cliente por estado (`status`) y vencidas (`show_expired`).
 
 ## Estructura
 
@@ -81,11 +82,11 @@ electrocam-crm/
 
 ## Avance estimado del proyecto
 
-- Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **95%**
+- Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **96%**
 - Módulo de órdenes de servicio (metabox, guardado, consecutivo, cita de control): **70%**
-- Módulo de cotizaciones (ítems estructurados + recálculo + estado/vencimiento): **66%**
+- Módulo de cotizaciones (ítems + recálculo + estado/vencimiento + filtros): **74%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **90%**
-- Portal cliente frontend (shortcodes + reprogramación + estado de cotizaciones): **75%**
+- Portal cliente frontend (shortcodes + reprogramación + filtros de cotización): **78%**
 - PDF y correo automático: **10%**
 - Conversación/comentarios y notificaciones: **70%**
