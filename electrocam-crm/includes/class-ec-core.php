@@ -645,6 +645,20 @@ class EC_Core {
 			<p><?php esc_html_e( 'Sin reprogramaciones registradas.', 'electrocam-crm' ); ?></p>
 		<?php endif; ?>
 		<?php
+		$email_audit = get_post_meta( $post->ID, 'ec_email_audit', true );
+		?>
+		<hr>
+		<p><strong><?php esc_html_e( 'Auditoría de correos', 'electrocam-crm' ); ?></strong></p>
+		<?php if ( ! empty( $email_audit ) && is_array( $email_audit ) ) : ?>
+			<ul>
+				<?php foreach ( array_reverse( array_slice( $email_audit, -5 ) ) as $entry ) : ?>
+					<li><?php echo esc_html( sprintf( __( '%1$s - %2$s (%3$s)', 'electrocam-crm' ), isset( $entry['event'] ) ? $entry['event'] : '', isset( $entry['subject'] ) ? $entry['subject'] : '', isset( $entry['sent_at'] ) ? $entry['sent_at'] : '' ) ); ?></li>
+				<?php endforeach; ?>
+			</ul>
+		<?php else : ?>
+			<p><?php esc_html_e( 'Sin envíos registrados.', 'electrocam-crm' ); ?></p>
+		<?php endif; ?>
+		<?php
 	}
 
 	/**
@@ -876,7 +890,7 @@ class EC_Core {
 			'ec_support_email',
 			array(
 				'type'              => 'string',
-				'sanitize_callback' => 'sanitize_email',
+				'sanitize_callback' => array( $this, 'sanitize_support_email_setting' ),
 				'default'           => 'servicioalcliente@electrocam.com',
 			)
 		);
@@ -928,6 +942,30 @@ class EC_Core {
 		<?php
 	}
 
+
+
+	/**
+	 * Sanitiza correo principal de soporte.
+	 *
+	 * @param string $value Valor recibido.
+	 * @return string
+	 */
+	public function sanitize_support_email_setting( $value ) {
+		$value = is_string( $value ) ? trim( $value ) : '';
+		$sanitized = sanitize_email( $value );
+
+		if ( empty( $sanitized ) ) {
+			add_settings_error(
+				'ec_support_email',
+				'ec_support_email_invalid',
+				__( 'El correo de soporte no es válido. Se restauró el valor por defecto.', 'electrocam-crm' ),
+				'error'
+			);
+			return 'servicioalcliente@electrocam.com';
+		}
+
+		return $sanitized;
+	}
 
 	/**
 	 * Sanitiza correo opcional de notificación.

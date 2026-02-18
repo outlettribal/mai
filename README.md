@@ -46,6 +46,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 24. Pantalla de ajustes en wp-admin para editar correo de soporte sin tocar base de datos.
 25. Campo opcional de correo secundario (CC) para notificaciones y auditoría de envíos.
 26. Validación del correo CC en ajustes con mensajes de error visibles en wp-admin.
+27. Validación del correo principal de soporte y visualización de auditoría de correos en metabox de citas.
 
 ## Estructura
 
@@ -76,11 +77,11 @@ electrocam-crm/
 
 ## Avance estimado del proyecto
 
-- Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **93%**
+- Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **94%**
 - Módulo de órdenes de servicio (metabox, guardado, consecutivo, cita de control): **70%**
 - Módulo de cotizaciones (metabox + totales básicos): **45%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **88%**
 - Portal cliente frontend (shortcodes listados + reprogramación inicial): **68%**
 - PDF y correo automático: **10%**
-- Conversación/comentarios y notificaciones: **65%**
+- Conversación/comentarios y notificaciones: **68%**
