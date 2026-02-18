@@ -505,6 +505,8 @@ class EC_Core {
 		$total = get_post_meta( $post->ID, 'ec_total', true );
 		$terms = get_post_meta( $post->ID, 'ec_terms_conditions', true );
 		$quotation_status = get_post_meta( $post->ID, 'ec_quotation_status', true );
+		$status_history = get_post_meta( $post->ID, 'ec_quotation_status_history', true );
+		$last_client_status_update = get_post_meta( $post->ID, 'ec_client_status_updated_at', true );
 		$quote_items = get_post_meta( $post->ID, 'ec_quote_items', true );
 		if ( ! is_array( $quote_items ) ) {
 			$quote_items = array();
@@ -575,6 +577,17 @@ class EC_Core {
 				<?php endforeach; ?>
 			</select>
 		</p>
+		<?php if ( ! empty( $last_client_status_update ) ) : ?>
+			<p><em><?php esc_html_e( 'Última actualización de estado por cliente:', 'electrocam-crm' ); ?> <?php echo esc_html( $last_client_status_update ); ?></em></p>
+		<?php endif; ?>
+		<?php if ( is_array( $status_history ) && ! empty( $status_history ) ) : ?>
+			<p><strong><?php esc_html_e( 'Historial de estados (últimos cambios)', 'electrocam-crm' ); ?></strong></p>
+			<ul>
+				<?php foreach ( array_slice( $status_history, -5 ) as $entry ) : ?>
+					<li><?php echo esc_html( isset( $entry['changed_at'] ) ? $entry['changed_at'] : '' ); ?> - <?php echo esc_html( isset( $entry['from'] ) ? $this->get_quotation_status_label( $entry['from'] ) : '' ); ?> → <?php echo esc_html( isset( $entry['to'] ) ? $this->get_quotation_status_label( $entry['to'] ) : '' ); ?> (<?php echo esc_html__( 'Usuario', 'electrocam-crm' ); ?> #<?php echo esc_html( isset( $entry['user_id'] ) ? (string) absint( $entry['user_id'] ) : '0' ); ?>)</li>
+				<?php endforeach; ?>
+			</ul>
+		<?php endif; ?>
 		<p>
 			<label for="ec_terms_conditions"><?php esc_html_e( 'Términos y condiciones', 'electrocam-crm' ); ?></label><br>
 			<textarea name="ec_terms_conditions" id="ec_terms_conditions" class="widefat" rows="4"><?php echo esc_textarea( $terms ); ?></textarea>
@@ -1590,6 +1603,7 @@ class EC_Core {
 			exit;
 		}
 
+		$this->append_quotation_status_history( $quotation_id, $current_status, $new_status, $current_user_id );
 		update_post_meta( $quotation_id, 'ec_quotation_status', $new_status );
 		update_post_meta( $quotation_id, 'ec_client_status_updated_at', gmdate( 'Y-m-d H:i:s' ) );
 		$this->send_quotation_status_update_email( $quotation_id, $new_status );
@@ -1618,6 +1632,37 @@ class EC_Core {
 		return '';
 	}
 
+
+
+	/**
+	 * Agrega una entrada al historial de cambios de estado de cotización.
+	 *
+	 * @param int    $quotation_id ID de cotización.
+	 * @param string $from_status  Estado anterior.
+	 * @param string $to_status    Estado nuevo.
+	 * @param int    $user_id      Usuario que realiza el cambio.
+	 * @return void
+	 */
+	private function append_quotation_status_history( $quotation_id, $from_status, $to_status, $user_id ) {
+		$history = get_post_meta( $quotation_id, 'ec_quotation_status_history', true );
+		if ( ! is_array( $history ) ) {
+			$history = array();
+		}
+
+		$history[] = array(
+			'from' => sanitize_key( $from_status ),
+			'to' => sanitize_key( $to_status ),
+			'user_id' => absint( $user_id ),
+			'changed_at' => gmdate( 'Y-m-d H:i:s' ),
+		);
+
+		$limit = (int) get_option( 'ec_audit_retention_limit', 50 );
+		if ( $limit > 0 && count( $history ) > $limit ) {
+			$history = array_slice( $history, -$limit );
+		}
+
+		update_post_meta( $quotation_id, 'ec_quotation_status_history', $history );
+	}
 
 	/**
 	 * Envía notificación cuando cliente aprueba/rechaza una cotización.
