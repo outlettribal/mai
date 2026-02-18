@@ -50,6 +50,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 28. Límite configurable de retención de auditoría (10-500) aplicado a historial de correos y reprogramaciones.
 29. Ítems de cotización estructurados (nombre, descripción, cantidad y valor unitario) con recálculo automático de subtotal/total e IVA al guardar.
 30. Mejor visibilidad de cotizaciones en portal cliente mostrando cantidad de ítems, subtotal, IVA y total.
+31. Flujo básico de estado de cotización (borrador, enviada, aprobada, rechazada) con detección de vencimiento en portal cliente según vigencia.
 
 ## Estructura
 
@@ -82,9 +83,9 @@ electrocam-crm/
 
 - Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **95%**
 - Módulo de órdenes de servicio (metabox, guardado, consecutivo, cita de control): **70%**
-- Módulo de cotizaciones (metabox + ítems estructurados + recálculo automático): **58%**
+- Módulo de cotizaciones (ítems estructurados + recálculo + estado/vencimiento): **66%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **90%**
-- Portal cliente frontend (shortcodes listados + reprogramación + detalle de cotizaciones): **72%**
+- Portal cliente frontend (shortcodes + reprogramación + estado de cotizaciones): **75%**
 - PDF y correo automático: **10%**
 - Conversación/comentarios y notificaciones: **70%**

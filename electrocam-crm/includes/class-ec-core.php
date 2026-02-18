@@ -502,6 +502,7 @@ class EC_Core {
 		$tax_rate = get_post_meta( $post->ID, 'ec_tax_rate', true );
 		$total = get_post_meta( $post->ID, 'ec_total', true );
 		$terms = get_post_meta( $post->ID, 'ec_terms_conditions', true );
+		$quotation_status = get_post_meta( $post->ID, 'ec_quotation_status', true );
 		$quote_items = get_post_meta( $post->ID, 'ec_quote_items', true );
 		if ( ! is_array( $quote_items ) ) {
 			$quote_items = array();
@@ -564,6 +565,14 @@ class EC_Core {
 				<input type="number" name="ec_total" id="ec_total" class="widefat" value="<?php echo esc_attr( $total ); ?>" min="0" step="0.01">
 			</p>
 		</div>
+		<p>
+			<label for="ec_quotation_status"><?php esc_html_e( 'Estado de cotización', 'electrocam-crm' ); ?></label><br>
+			<select name="ec_quotation_status" id="ec_quotation_status" class="widefat">
+				<?php foreach ( array( 'draft' => 'Borrador', 'sent' => 'Enviada', 'approved' => 'Aprobada', 'rejected' => 'Rechazada' ) as $status_value => $status_label ) : ?>
+					<option value="<?php echo esc_attr( $status_value ); ?>" <?php selected( $quotation_status ? $quotation_status : 'draft', $status_value ); ?>><?php echo esc_html( $status_label ); ?></option>
+				<?php endforeach; ?>
+			</select>
+		</p>
 		<p>
 			<label for="ec_terms_conditions"><?php esc_html_e( 'Términos y condiciones', 'electrocam-crm' ); ?></label><br>
 			<textarea name="ec_terms_conditions" id="ec_terms_conditions" class="widefat" rows="4"><?php echo esc_textarea( $terms ); ?></textarea>
@@ -763,6 +772,7 @@ class EC_Core {
 		$tax_rate = isset( $_POST['ec_tax_rate'] ) ? (float) wp_unslash( $_POST['ec_tax_rate'] ) : 19;
 		$total = isset( $_POST['ec_total'] ) ? (float) wp_unslash( $_POST['ec_total'] ) : 0;
 		$terms = isset( $_POST['ec_terms_conditions'] ) ? sanitize_textarea_field( wp_unslash( $_POST['ec_terms_conditions'] ) ) : '';
+		$quotation_status = isset( $_POST['ec_quotation_status'] ) ? sanitize_key( wp_unslash( $_POST['ec_quotation_status'] ) ) : 'draft';
 
 		$item_names = isset( $_POST['ec_quote_item_name'] ) && is_array( $_POST['ec_quote_item_name'] ) ? wp_unslash( $_POST['ec_quote_item_name'] ) : array();
 		$item_descriptions = isset( $_POST['ec_quote_item_description'] ) && is_array( $_POST['ec_quote_item_description'] ) ? wp_unslash( $_POST['ec_quote_item_description'] ) : array();
@@ -801,6 +811,11 @@ class EC_Core {
 			$tax_rate = 0;
 		}
 
+		$allowed_statuses = array( 'draft', 'sent', 'approved', 'rejected' );
+		if ( ! in_array( $quotation_status, $allowed_statuses, true ) ) {
+			$quotation_status = 'draft';
+		}
+
 		$total = $subtotal + ( $subtotal * ( $tax_rate / 100 ) );
 
 		update_post_meta( $post_id, 'ec_client_id', $client_id );
@@ -811,6 +826,7 @@ class EC_Core {
 		update_post_meta( $post_id, 'ec_tax_rate', round( $tax_rate, 2 ) );
 		update_post_meta( $post_id, 'ec_total', round( $total, 2 ) );
 		update_post_meta( $post_id, 'ec_terms_conditions', $terms );
+		update_post_meta( $post_id, 'ec_quotation_status', $quotation_status );
 		update_post_meta( $post_id, 'ec_quote_items', $items );
 	}
 
@@ -1163,6 +1179,24 @@ class EC_Core {
 	}
 
 	/**
+	 * Obtiene etiqueta de estado de cotización para frontend.
+	 *
+	 * @param string $status Estado almacenado.
+	 * @return string
+	 */
+	private function get_quotation_status_label( $status ) {
+		$labels = array(
+			'draft' => __( 'Borrador', 'electrocam-crm' ),
+			'sent' => __( 'Enviada', 'electrocam-crm' ),
+			'approved' => __( 'Aprobada', 'electrocam-crm' ),
+			'rejected' => __( 'Rechazada', 'electrocam-crm' ),
+			'expired' => __( 'Vencida', 'electrocam-crm' ),
+		);
+
+		return isset( $labels[ $status ] ) ? $labels[ $status ] : $labels['draft'];
+	}
+
+	/**
 	 * Renderiza listado de cotizaciones para cliente autenticado.
 	 *
 	 * @return string
@@ -1203,7 +1237,14 @@ class EC_Core {
 			$valid_until = get_post_meta( $quotation->ID, 'ec_valid_until', true );
 			$quote_items = get_post_meta( $quotation->ID, 'ec_quote_items', true );
 			$item_count = is_array( $quote_items ) ? count( $quote_items ) : 0;
+			$status = get_post_meta( $quotation->ID, 'ec_quotation_status', true );
+			$valid_timestamp = $valid_until ? strtotime( $valid_until . ' 23:59:59' ) : false;
+			if ( $valid_timestamp && $valid_timestamp < current_time( 'timestamp' ) && ! in_array( $status, array( 'approved', 'rejected' ), true ) ) {
+				$status = 'expired';
+			}
+
 			$output .= '<li><strong>' . esc_html( $quotation->post_title ) . '</strong><br>';
+			$output .= esc_html__( 'Estado:', 'electrocam-crm' ) . ' ' . esc_html( $this->get_quotation_status_label( $status ? $status : 'draft' ) ) . '<br>';
 			$output .= esc_html__( 'Ítems:', 'electrocam-crm' ) . ' ' . esc_html( (string) $item_count ) . ' · ';
 			$output .= esc_html__( 'Subtotal:', 'electrocam-crm' ) . ' $' . esc_html( number_format_i18n( $subtotal, 2 ) ) . ' · ';
 			$output .= esc_html__( 'IVA:', 'electrocam-crm' ) . ' ' . esc_html( number_format_i18n( $tax_rate, 2 ) ) . '% · ';
