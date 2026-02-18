@@ -1456,13 +1456,22 @@ class EC_Core {
 		if ( isset( $_GET['eca_client_page'] ) ) {
 			$page = max( 1, absint( wp_unslash( $_GET['eca_client_page'] ) ) );
 		}
+		if ( isset( $_GET['eca_limit'] ) ) {
+			$limit = max( 1, min( 100, absint( wp_unslash( $_GET['eca_limit'] ) ) ) );
+		}
 		$offset = ( $page - 1 ) * $limit;
 		$filter_status = sanitize_key( (string) $atts['status'] );
+		if ( isset( $_GET['eca_status'] ) ) {
+			$filter_status = sanitize_key( (string) wp_unslash( $_GET['eca_status'] ) );
+		}
 		$allowed_statuses = array( 'scheduled', 'completed', 'cancelled' );
 		if ( $filter_status && ! in_array( $filter_status, $allowed_statuses, true ) ) {
 			$filter_status = '';
 		}
 		$show_past = 'no' !== strtolower( (string) $atts['show_past'] );
+		if ( isset( $_GET['eca_show_past'] ) ) {
+			$show_past = 'no' !== strtolower( (string) wp_unslash( $_GET['eca_show_past'] ) );
+		}
 		$today = current_time( 'Y-m-d' );
 
 		$meta_query = array(
@@ -1537,8 +1546,11 @@ class EC_Core {
 		$pagination_base_args = array(
 			'eca_client_page' => $page,
 			'limit' => $limit,
+			'eca_limit' => $limit,
 			'status' => $filter_status,
+			'eca_status' => $filter_status,
 			'show_past' => $show_past ? 'yes' : 'no',
+			'eca_show_past' => $show_past ? 'yes' : 'no',
 		);
 
 		$pagination_links = array();
@@ -1826,13 +1838,22 @@ class EC_Core {
 		if ( isset( $_GET['eca_operator_page'] ) ) {
 			$page = max( 1, absint( wp_unslash( $_GET['eca_operator_page'] ) ) );
 		}
+		if ( isset( $_GET['eca_limit'] ) ) {
+			$limit = max( 1, min( 100, absint( wp_unslash( $_GET['eca_limit'] ) ) ) );
+		}
 		$offset = ( $page - 1 ) * $limit;
 		$filter_status = sanitize_key( (string) $atts['status'] );
+		if ( isset( $_GET['eca_status'] ) ) {
+			$filter_status = sanitize_key( (string) wp_unslash( $_GET['eca_status'] ) );
+		}
 		$allowed_statuses = array( 'scheduled', 'completed', 'cancelled' );
 		if ( $filter_status && ! in_array( $filter_status, $allowed_statuses, true ) ) {
 			$filter_status = '';
 		}
 		$show_past = 'no' !== strtolower( (string) $atts['show_past'] );
+		if ( isset( $_GET['eca_show_past'] ) ) {
+			$show_past = 'no' !== strtolower( (string) wp_unslash( $_GET['eca_show_past'] ) );
+		}
 		$today = current_time( 'Y-m-d' );
 
 		$service_orders = get_posts(
@@ -1925,8 +1946,11 @@ class EC_Core {
 		$pagination_base_args = array(
 			'eca_operator_page' => $page,
 			'limit' => $limit,
+			'eca_limit' => $limit,
 			'status' => $filter_status,
+			'eca_status' => $filter_status,
 			'show_past' => $show_past ? 'yes' : 'no',
+			'eca_show_past' => $show_past ? 'yes' : 'no',
 		);
 
 		$pagination_links = array();
