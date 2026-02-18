@@ -58,6 +58,7 @@ class EC_Core {
 	 * @return void
 	 */
 	public static function deactivate() {
+		wp_clear_scheduled_hook( 'ec_send_appointment_reminder' );
 		flush_rewrite_rules();
 	}
 
@@ -90,6 +91,7 @@ class EC_Core {
 		add_action( 'admin_post_ec_operator_reschedule_appointment', array( $this, 'handle_operator_reschedule_appointment' ) );
 		add_action( 'admin_post_ec_client_update_quotation_status', array( $this, 'handle_client_update_quotation_status' ) );
 		add_action( 'comment_post', array( $this, 'notify_service_order_comment' ), 10, 3 );
+		add_action( 'ec_send_appointment_reminder', array( $this, 'send_appointment_reminder' ) );
 	}
 
 	/**
@@ -928,6 +930,12 @@ class EC_Core {
 		update_post_meta( $post_id, 'ec_appointment_time', $time );
 		update_post_meta( $post_id, 'ec_modality', $modality );
 		update_post_meta( $post_id, 'ec_status', $status );
+
+		if ( 'scheduled' === $status ) {
+			$this->schedule_appointment_reminder( $post_id, $date, $time );
+		} else {
+			$this->clear_appointment_reminder( $post_id );
+		}
 	}
 
 	/**
@@ -2330,6 +2338,7 @@ class EC_Core {
 		update_post_meta( $appointment_id, 'ec_appointment_time', $new_time );
 		update_post_meta( $appointment_id, 'ec_status', 'scheduled' );
 		$this->append_appointment_reschedule_history( $appointment_id, $old_date, $old_time, $new_date, $new_time, $current_user_id );
+		$this->schedule_appointment_reminder( $appointment_id, $new_date, $new_time );
 		$this->send_appointment_reschedule_email( $appointment_id, $new_date, $new_time );
 
 		wp_safe_redirect( add_query_arg( 'ec_appointment_updated', '1', $redirect_url ) );
@@ -2700,5 +2709,122 @@ class EC_Core {
 		update_post_meta( $appointment_id, 'ec_appointment_time', $control_time );
 		update_post_meta( $appointment_id, 'ec_modality', $modality );
 		update_post_meta( $appointment_id, 'ec_status', 'scheduled' );
+		$this->schedule_appointment_reminder( $appointment_id, $control_date, $control_time );
+	}
+
+	/**
+	 * Programa recordatorio automático 24h antes de la cita.
+	 *
+	 * @param int    $appointment_id ID de cita.
+	 * @param string $date Fecha Y-m-d.
+	 * @param string $time Hora H:i.
+	 * @return void
+	 */
+	private function schedule_appointment_reminder( $appointment_id, $date, $time ) {
+		$appointment_id = absint( $appointment_id );
+		if ( ! $appointment_id || ! $this->is_valid_date_time( $date, $time ) ) {
+			return;
+		}
+
+		$this->clear_appointment_reminder( $appointment_id );
+
+		$appointment_timestamp = strtotime( $date . ' ' . $time );
+		if ( ! $appointment_timestamp ) {
+			return;
+		}
+
+		$reminder_timestamp = $appointment_timestamp - DAY_IN_SECONDS;
+		if ( $reminder_timestamp <= time() ) {
+			return;
+		}
+
+		wp_schedule_single_event( $reminder_timestamp, 'ec_send_appointment_reminder', array( $appointment_id ) );
+		update_post_meta( $appointment_id, 'ec_reminder_scheduled_for', gmdate( 'Y-m-d H:i:s', $reminder_timestamp ) );
+	}
+
+	/**
+	 * Elimina recordatorio pendiente de una cita.
+	 *
+	 * @param int $appointment_id ID de cita.
+	 * @return void
+	 */
+	private function clear_appointment_reminder( $appointment_id ) {
+		$appointment_id = absint( $appointment_id );
+		if ( ! $appointment_id ) {
+			return;
+		}
+
+		wp_clear_scheduled_hook( 'ec_send_appointment_reminder', array( $appointment_id ) );
+		delete_post_meta( $appointment_id, 'ec_reminder_scheduled_for' );
+	}
+
+	/**
+	 * Envía recordatorio por correo cuando dispara WP-Cron.
+	 *
+	 * @param int $appointment_id ID de cita.
+	 * @return void
+	 */
+	public function send_appointment_reminder( $appointment_id ) {
+		$appointment_id = absint( $appointment_id );
+		if ( ! $appointment_id ) {
+			return;
+		}
+
+		$status = (string) get_post_meta( $appointment_id, 'ec_status', true );
+		if ( 'scheduled' !== $status ) {
+			return;
+		}
+
+		$date = (string) get_post_meta( $appointment_id, 'ec_appointment_date', true );
+		$time = (string) get_post_meta( $appointment_id, 'ec_appointment_time', true );
+		if ( ! $this->is_valid_date_time( $date, $time ) ) {
+			return;
+		}
+
+		$client_id = (int) get_post_meta( $appointment_id, 'ec_client_id', true );
+		$recipients = array();
+		if ( $client_id > 0 ) {
+			$client = get_user_by( 'id', $client_id );
+			if ( $client && ! empty( $client->user_email ) ) {
+				$recipients[] = sanitize_email( $client->user_email );
+			}
+		}
+
+		$support_email = $this->get_support_email();
+		if ( ! empty( $support_email ) ) {
+			$recipients[] = $support_email;
+		}
+
+		$cc_email = $this->get_notification_cc_email();
+		if ( ! empty( $cc_email ) ) {
+			$recipients[] = $cc_email;
+		}
+
+		$recipients = array_unique( array_filter( $recipients ) );
+		if ( empty( $recipients ) ) {
+			return;
+		}
+
+		$subject = sprintf(
+			/* translators: %d: appointment ID */
+			esc_html__( '[Electrocam] Recordatorio de cita #%d', 'electrocam-crm' ),
+			$appointment_id
+		);
+
+		$message = sprintf(
+			/* translators: 1: appointment ID, 2: date, 3: time */
+			esc_html__( 'Hola, este es un recordatorio de la cita #%1$d programada para el %2$s a las %3$s.', 'electrocam-crm' ),
+			$appointment_id,
+			$date,
+			$time
+		);
+
+		$sent = wp_mail( $recipients, $subject, wpautop( $message ), array( 'Content-Type: text/html; charset=UTF-8' ) );
+		if ( $sent ) {
+			$sent_at = gmdate( 'Y-m-d H:i:s' );
+			update_post_meta( $appointment_id, 'ec_last_reminder_email_sent_at', $sent_at );
+			$this->append_email_audit( $appointment_id, 'appointment_reminder', $recipients, $subject, $sent_at );
+		}
 	}
 }
+
