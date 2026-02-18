@@ -1441,6 +1441,8 @@ class EC_Core {
 				'limit' => 20,
 				'page' => 1,
 				'show_past' => 'yes',
+				'date_from' => '',
+				'date_to' => '',
 			),
 			$atts,
 			'ec_client_appointments'
@@ -1473,6 +1475,20 @@ class EC_Core {
 			$show_past = 'no' !== strtolower( (string) wp_unslash( $_GET['eca_show_past'] ) );
 		}
 		$today = current_time( 'Y-m-d' );
+		$date_from = sanitize_text_field( (string) $atts['date_from'] );
+		$date_to = sanitize_text_field( (string) $atts['date_to'] );
+		if ( isset( $_GET['eca_from'] ) ) {
+			$date_from = sanitize_text_field( (string) wp_unslash( $_GET['eca_from'] ) );
+		}
+		if ( isset( $_GET['eca_to'] ) ) {
+			$date_to = sanitize_text_field( (string) wp_unslash( $_GET['eca_to'] ) );
+		}
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_from ) ) {
+			$date_from = '';
+		}
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_to ) ) {
+			$date_to = '';
+		}
 
 		$meta_query = array(
 			array(
@@ -1494,6 +1510,22 @@ class EC_Core {
 				'type'    => 'DATE',
 			);
 		}
+		if ( $date_from ) {
+			$meta_query[] = array(
+				'key'     => 'ec_appointment_date',
+				'value'   => $date_from,
+				'compare' => '>=',
+				'type'    => 'DATE',
+			);
+		}
+		if ( $date_to ) {
+			$meta_query[] = array(
+				'key'     => 'ec_appointment_date',
+				'value'   => $date_to,
+				'compare' => '<=',
+				'type'    => 'DATE',
+			);
+		}
 
 		$appointments = get_posts(
 			array(
@@ -1508,7 +1540,7 @@ class EC_Core {
 		);
 
 		if ( empty( $appointments ) ) {
-			if ( $filter_status || ! $show_past ) {
+			if ( $filter_status || ! $show_past || $date_from || $date_to ) {
 				return $message . '<p>' . esc_html__( 'No hay citas para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
 			}
 			return $message . '<p>' . esc_html__( 'No tienes citas registradas.', 'electrocam-crm' ) . '</p>';
@@ -1551,6 +1583,8 @@ class EC_Core {
 			'eca_status' => $filter_status,
 			'show_past' => $show_past ? 'yes' : 'no',
 			'eca_show_past' => $show_past ? 'yes' : 'no',
+			'eca_from' => $date_from,
+			'eca_to' => $date_to,
 		);
 
 		$pagination_links = array();
@@ -1819,6 +1853,8 @@ class EC_Core {
 				'limit' => 20,
 				'page' => 1,
 				'show_past' => 'yes',
+				'date_from' => '',
+				'date_to' => '',
 			),
 			$atts,
 			'ec_operator_appointments'
@@ -1855,6 +1891,20 @@ class EC_Core {
 			$show_past = 'no' !== strtolower( (string) wp_unslash( $_GET['eca_show_past'] ) );
 		}
 		$today = current_time( 'Y-m-d' );
+		$date_from = sanitize_text_field( (string) $atts['date_from'] );
+		$date_to = sanitize_text_field( (string) $atts['date_to'] );
+		if ( isset( $_GET['eca_from'] ) ) {
+			$date_from = sanitize_text_field( (string) wp_unslash( $_GET['eca_from'] ) );
+		}
+		if ( isset( $_GET['eca_to'] ) ) {
+			$date_to = sanitize_text_field( (string) wp_unslash( $_GET['eca_to'] ) );
+		}
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_from ) ) {
+			$date_from = '';
+		}
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_to ) ) {
+			$date_to = '';
+		}
 
 		$service_orders = get_posts(
 			array(
@@ -1896,6 +1946,22 @@ class EC_Core {
 				'type'    => 'DATE',
 			);
 		}
+		if ( $date_from ) {
+			$meta_query[] = array(
+				'key'     => 'ec_appointment_date',
+				'value'   => $date_from,
+				'compare' => '>=',
+				'type'    => 'DATE',
+			);
+		}
+		if ( $date_to ) {
+			$meta_query[] = array(
+				'key'     => 'ec_appointment_date',
+				'value'   => $date_to,
+				'compare' => '<=',
+				'type'    => 'DATE',
+			);
+		}
 
 		$appointments = get_posts(
 			array(
@@ -1910,7 +1976,7 @@ class EC_Core {
 		);
 
 		if ( empty( $appointments ) ) {
-			if ( $filter_status || ! $show_past ) {
+			if ( $filter_status || ! $show_past || $date_from || $date_to ) {
 				return $message . '<p>' . esc_html__( 'No hay citas para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
 			}
 			return $message . '<p>' . esc_html__( 'No tienes citas asignadas.', 'electrocam-crm' ) . '</p>';
@@ -1951,6 +2017,8 @@ class EC_Core {
 			'eca_status' => $filter_status,
 			'show_past' => $show_past ? 'yes' : 'no',
 			'eca_show_past' => $show_past ? 'yes' : 'no',
+			'eca_from' => $date_from,
+			'eca_to' => $date_to,
 		);
 
 		$pagination_links = array();

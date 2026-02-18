@@ -70,6 +70,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 48. Shortcodes de citas de cliente/operario ahora incluyen `status`, `limit` y `page` con paginación simple y preservación de filtros en navegación (`eca_client_page`, `eca_operator_page`).
 49. Shortcodes de citas de cliente/operario ahora soportan `show_past` (`yes/no`) para ocultar citas pasadas y conservar el filtro en la paginación.
 50. Los filtros/paginación de citas también pueden leerse desde query args (`eca_status`, `eca_limit`, `eca_show_past`) para compartir enlaces con el estado del listado.
+51. Filtro por rango de fechas en citas (`eca_from`, `eca_to`) para cliente/operario, preservado durante la paginación.
 
 ## Estructura
 
@@ -104,7 +105,7 @@ electrocam-crm/
 - Módulo de órdenes de servicio (metabox + trazabilidad + filtros frontend): **75%**
 - Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **99%**
 - Módulo de inventario (metabox + persistencia): **40%**
-- Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **95%**
+- Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **96%**
 - Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **99%**
 - PDF y correo automático: **10%**
 - Conversación/comentarios y notificaciones: **79%**
