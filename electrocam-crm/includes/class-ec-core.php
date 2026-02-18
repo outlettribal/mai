@@ -1489,6 +1489,11 @@ class EC_Core {
 		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_to ) ) {
 			$date_to = '';
 		}
+		if ( $date_from && $date_to && $date_from > $date_to ) {
+			$temp = $date_from;
+			$date_from = $date_to;
+			$date_to = $temp;
+		}
 
 		$meta_query = array(
 			array(
@@ -1904,6 +1909,11 @@ class EC_Core {
 		}
 		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_to ) ) {
 			$date_to = '';
+		}
+		if ( $date_from && $date_to && $date_from > $date_to ) {
+			$temp = $date_from;
+			$date_from = $date_to;
+			$date_to = $temp;
 		}
 
 		$service_orders = get_posts(
