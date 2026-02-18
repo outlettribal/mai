@@ -67,6 +67,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 45. Paginación básica (limit/page + Anterior/Siguiente) añadida también a shortcodes de órdenes de cliente y operario.
 46. Enlaces de paginación de órdenes ahora conservan `limit` al navegar entre páginas (cliente/operario).
 47. Filtro opcional `status` añadido a shortcodes de órdenes (`[ec_client_orders]`, `[ec_operator_orders]`) y preservado en paginación.
+48. Shortcodes de citas de cliente/operario ahora incluyen `status`, `limit` y `page` con paginación simple y preservación de filtros en navegación (`eca_client_page`, `eca_operator_page`).
 
 ## Estructura
 
@@ -101,7 +102,7 @@ electrocam-crm/
 - Módulo de órdenes de servicio (metabox + trazabilidad + filtros frontend): **75%**
 - Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **99%**
 - Módulo de inventario (metabox + persistencia): **40%**
-- Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **90%**
-- Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **98%**
+- Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **93%**
+- Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **99%**
 - PDF y correo automático: **10%**
 - Conversación/comentarios y notificaciones: **79%**

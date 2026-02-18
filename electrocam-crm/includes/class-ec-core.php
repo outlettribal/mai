@@ -1433,14 +1433,47 @@ class EC_Core {
 	 *
 	 * @return string
 	 */
-	public function render_client_appointments_shortcode() {
+	public function render_client_appointments_shortcode( $atts = array() ) {
 		$current_user_id = get_current_user_id();
+		$atts = shortcode_atts(
+			array(
+				'status' => '',
+				'limit' => 20,
+				'page' => 1,
+			),
+			$atts,
+			'ec_client_appointments'
+		);
 
 		if ( ! $current_user_id ) {
 			return '<p>' . esc_html__( 'Debes iniciar sesión para ver tus citas.', 'electrocam-crm' ) . '</p>';
 		}
 
 		$message = $this->get_reschedule_feedback_message();
+		$limit = max( 1, min( 100, absint( $atts['limit'] ) ) );
+		$page = max( 1, absint( $atts['page'] ) );
+		if ( isset( $_GET['eca_client_page'] ) ) {
+			$page = max( 1, absint( wp_unslash( $_GET['eca_client_page'] ) ) );
+		}
+		$offset = ( $page - 1 ) * $limit;
+		$filter_status = sanitize_key( (string) $atts['status'] );
+		$allowed_statuses = array( 'scheduled', 'completed', 'cancelled' );
+		if ( $filter_status && ! in_array( $filter_status, $allowed_statuses, true ) ) {
+			$filter_status = '';
+		}
+
+		$meta_query = array(
+			array(
+				'key'   => 'ec_client_id',
+				'value' => $current_user_id,
+			),
+		);
+		if ( $filter_status ) {
+			$meta_query[] = array(
+				'key'   => 'ec_status',
+				'value' => $filter_status,
+			);
+		}
 
 		$appointments = get_posts(
 			array(
@@ -1450,17 +1483,20 @@ class EC_Core {
 				'offset'         => $offset,
 				'orderby'        => 'date',
 				'order'          => 'DESC',
-				'meta_query'     => array(
-					array(
-						'key'   => 'ec_client_id',
-						'value' => $current_user_id,
-					),
-				),
+				'meta_query'     => $meta_query,
 			)
 		);
 
 		if ( empty( $appointments ) ) {
+			if ( $filter_status ) {
+				return $message . '<p>' . esc_html__( 'No hay citas para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
+			}
 			return $message . '<p>' . esc_html__( 'No tienes citas registradas.', 'electrocam-crm' ) . '</p>';
+		}
+
+		$has_more = count( $appointments ) > $limit;
+		if ( $has_more ) {
+			$appointments = array_slice( $appointments, 0, $limit );
 		}
 
 		$output = $message;
@@ -1486,6 +1522,27 @@ class EC_Core {
 		}
 
 		$output .= '</ul>';
+
+		$pagination_base_args = array(
+			'eca_client_page' => $page,
+			'limit' => $limit,
+			'status' => $filter_status,
+		);
+
+		$pagination_links = array();
+		if ( $page > 1 ) {
+			$previous_args = $pagination_base_args;
+			$previous_args['eca_client_page'] = $page - 1;
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( $previous_args ) ) . '">' . esc_html__( 'Anterior', 'electrocam-crm' ) . '</a>';
+		}
+		if ( $has_more ) {
+			$next_args = $pagination_base_args;
+			$next_args['eca_client_page'] = $page + 1;
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( $next_args ) ) . '">' . esc_html__( 'Siguiente', 'electrocam-crm' ) . '</a>';
+		}
+		if ( ! empty( $pagination_links ) ) {
+			$output .= '<p class="ec-pagination-links">' . implode( ' | ', $pagination_links ) . '</p>';
+		}
 
 		return $output;
 	}
@@ -1730,8 +1787,17 @@ class EC_Core {
 	 *
 	 * @return string
 	 */
-	public function render_operator_appointments_shortcode() {
+	public function render_operator_appointments_shortcode( $atts = array() ) {
 		$current_user_id = get_current_user_id();
+		$atts = shortcode_atts(
+			array(
+				'status' => '',
+				'limit' => 20,
+				'page' => 1,
+			),
+			$atts,
+			'ec_operator_appointments'
+		);
 
 		if ( ! $current_user_id ) {
 			return '<p>' . esc_html__( 'Debes iniciar sesión para ver tus citas asignadas.', 'electrocam-crm' ) . '</p>';
@@ -1742,6 +1808,17 @@ class EC_Core {
 		}
 
 		$message = $this->get_reschedule_feedback_message();
+		$limit = max( 1, min( 100, absint( $atts['limit'] ) ) );
+		$page = max( 1, absint( $atts['page'] ) );
+		if ( isset( $_GET['eca_operator_page'] ) ) {
+			$page = max( 1, absint( wp_unslash( $_GET['eca_operator_page'] ) ) );
+		}
+		$offset = ( $page - 1 ) * $limit;
+		$filter_status = sanitize_key( (string) $atts['status'] );
+		$allowed_statuses = array( 'scheduled', 'completed', 'cancelled' );
+		if ( $filter_status && ! in_array( $filter_status, $allowed_statuses, true ) ) {
+			$filter_status = '';
+		}
 
 		$service_orders = get_posts(
 			array(
@@ -1762,25 +1839,42 @@ class EC_Core {
 			return $message . '<p>' . esc_html__( 'No tienes citas asignadas.', 'electrocam-crm' ) . '</p>';
 		}
 
+		$meta_query = array(
+			array(
+				'key'     => 'ec_service_order_id',
+				'value'   => $service_orders,
+				'compare' => 'IN',
+			),
+		);
+		if ( $filter_status ) {
+			$meta_query[] = array(
+				'key'   => 'ec_status',
+				'value' => $filter_status,
+			);
+		}
+
 		$appointments = get_posts(
 			array(
 				'post_type'      => 'appointment',
 				'post_status'    => array( 'publish', 'private' ),
-				'posts_per_page' => 100,
+				'posts_per_page' => $limit + 1,
+				'offset'         => $offset,
 				'orderby'        => 'date',
 				'order'          => 'DESC',
-				'meta_query'     => array(
-					array(
-						'key'     => 'ec_service_order_id',
-						'value'   => $service_orders,
-						'compare' => 'IN',
-					),
-				),
+				'meta_query'     => $meta_query,
 			)
 		);
 
 		if ( empty( $appointments ) ) {
+			if ( $filter_status ) {
+				return $message . '<p>' . esc_html__( 'No hay citas para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
+			}
 			return $message . '<p>' . esc_html__( 'No tienes citas asignadas.', 'electrocam-crm' ) . '</p>';
+		}
+
+		$has_more = count( $appointments ) > $limit;
+		if ( $has_more ) {
+			$appointments = array_slice( $appointments, 0, $limit );
 		}
 
 		$output = $message;
@@ -1805,9 +1899,29 @@ class EC_Core {
 		}
 		$output .= '</ul>';
 
+		$pagination_base_args = array(
+			'eca_operator_page' => $page,
+			'limit' => $limit,
+			'status' => $filter_status,
+		);
+
+		$pagination_links = array();
+		if ( $page > 1 ) {
+			$previous_args = $pagination_base_args;
+			$previous_args['eca_operator_page'] = $page - 1;
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( $previous_args ) ) . '">' . esc_html__( 'Anterior', 'electrocam-crm' ) . '</a>';
+		}
+		if ( $has_more ) {
+			$next_args = $pagination_base_args;
+			$next_args['eca_operator_page'] = $page + 1;
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( $next_args ) ) . '">' . esc_html__( 'Siguiente', 'electrocam-crm' ) . '</a>';
+		}
+		if ( ! empty( $pagination_links ) ) {
+			$output .= '<p class="ec-pagination-links">' . implode( ' | ', $pagination_links ) . '</p>';
+		}
+
 		return $output;
 	}
-
 
 
 	/**
