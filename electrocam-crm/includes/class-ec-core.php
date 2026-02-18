@@ -1164,8 +1164,16 @@ class EC_Core {
 	 *
 	 * @return string
 	 */
-	public function render_client_orders_shortcode() {
+	public function render_client_orders_shortcode( $atts = array() ) {
 		$current_user_id = get_current_user_id();
+		$atts = shortcode_atts(
+			array(
+				'limit' => 20,
+				'page' => 1,
+			),
+			$atts,
+			'ec_client_orders'
+		);
 
 		if ( ! $current_user_id ) {
 			return '<p>' . esc_html__( 'Debes iniciar sesión para ver tus órdenes.', 'electrocam-crm' ) . '</p>';
@@ -1174,6 +1182,13 @@ class EC_Core {
 		if ( ! current_user_can( 'read' ) ) {
 			return '<p>' . esc_html__( 'No tienes permisos para ver esta información.', 'electrocam-crm' ) . '</p>';
 		}
+
+		$limit = max( 1, min( 100, absint( $atts['limit'] ) ) );
+		$page = max( 1, absint( $atts['page'] ) );
+		if ( isset( $_GET['eco_client_page'] ) ) {
+			$page = max( 1, absint( wp_unslash( $_GET['eco_client_page'] ) ) );
+		}
+		$offset = ( $page - 1 ) * $limit;
 
 		$orders = get_posts(
 			array(
@@ -1196,6 +1211,11 @@ class EC_Core {
 			return '<p>' . esc_html__( 'No tienes órdenes registradas.', 'electrocam-crm' ) . '</p>';
 		}
 
+		$has_more = count( $orders ) > $limit;
+		if ( $has_more ) {
+			$orders = array_slice( $orders, 0, $limit );
+		}
+
 		$output = '<ul class="ec-client-list ec-client-orders">';
 
 		foreach ( $orders as $order ) {
@@ -1207,6 +1227,16 @@ class EC_Core {
 
 		$output .= '</ul>';
 
+		$pagination_links = array();
+		if ( $page > 1 ) {
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( 'eco_client_page', $page - 1 ) ) . '">' . esc_html__( 'Anterior', 'electrocam-crm' ) . '</a>';
+		}
+		if ( $has_more ) {
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( 'eco_client_page', $page + 1 ) ) . '">' . esc_html__( 'Siguiente', 'electrocam-crm' ) . '</a>';
+		}
+		if ( ! empty( $pagination_links ) ) {
+			$output .= '<p class="ec-pagination-links">' . implode( ' | ', $pagination_links ) . '</p>';
+		}
 
 		return $output;
 	}
@@ -1439,8 +1469,16 @@ class EC_Core {
 	 *
 	 * @return string
 	 */
-	public function render_operator_orders_shortcode() {
+	public function render_operator_orders_shortcode( $atts = array() ) {
 		$current_user_id = get_current_user_id();
+		$atts = shortcode_atts(
+			array(
+				'limit' => 20,
+				'page' => 1,
+			),
+			$atts,
+			'ec_operator_orders'
+		);
 
 		if ( ! $current_user_id ) {
 			return '<p>' . esc_html__( 'Debes iniciar sesión para ver tus órdenes asignadas.', 'electrocam-crm' ) . '</p>';
@@ -1450,11 +1488,19 @@ class EC_Core {
 			return '<p>' . esc_html__( 'No tienes permisos de operario para ver esta información.', 'electrocam-crm' ) . '</p>';
 		}
 
+		$limit = max( 1, min( 100, absint( $atts['limit'] ) ) );
+		$page = max( 1, absint( $atts['page'] ) );
+		if ( isset( $_GET['eco_operator_page'] ) ) {
+			$page = max( 1, absint( wp_unslash( $_GET['eco_operator_page'] ) ) );
+		}
+		$offset = ( $page - 1 ) * $limit;
+
 		$orders = get_posts(
 			array(
 				'post_type'      => 'service_order',
 				'post_status'    => array( 'publish', 'private' ),
-				'posts_per_page' => 50,
+				'posts_per_page' => $limit + 1,
+				'offset'         => $offset,
 				'orderby'        => 'date',
 				'order'          => 'DESC',
 				'meta_query'     => array(
@@ -1470,6 +1516,11 @@ class EC_Core {
 			return '<p>' . esc_html__( 'No tienes órdenes asignadas.', 'electrocam-crm' ) . '</p>';
 		}
 
+		$has_more = count( $orders ) > $limit;
+		if ( $has_more ) {
+			$orders = array_slice( $orders, 0, $limit );
+		}
+
 		$output = '<ul class="ec-operator-list ec-operator-orders">';
 		foreach ( $orders as $order ) {
 			$order_number = get_post_meta( $order->ID, 'ec_order_number', true );
@@ -1478,6 +1529,17 @@ class EC_Core {
 			$output .= '<li><strong>' . esc_html( $order_number ? $order_number : $order->post_title ) . '</strong> - ' . esc_html( $service_date ) . ' - ' . esc_html( $status ) . '</li>';
 		}
 		$output .= '</ul>';
+
+		$pagination_links = array();
+		if ( $page > 1 ) {
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( 'eco_operator_page', $page - 1 ) ) . '">' . esc_html__( 'Anterior', 'electrocam-crm' ) . '</a>';
+		}
+		if ( $has_more ) {
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( 'eco_operator_page', $page + 1 ) ) . '">' . esc_html__( 'Siguiente', 'electrocam-crm' ) . '</a>';
+		}
+		if ( ! empty( $pagination_links ) ) {
+			$output .= '<p class="ec-pagination-links">' . implode( ' | ', $pagination_links ) . '</p>';
+		}
 
 		return $output;
 	}
