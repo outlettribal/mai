@@ -88,6 +88,7 @@ class EC_Core {
 		add_shortcode( 'ec_operator_quotations', array( $this, 'render_operator_quotations_shortcode' ) );
 		add_action( 'admin_post_ec_client_reschedule_appointment', array( $this, 'handle_client_reschedule_appointment' ) );
 		add_action( 'admin_post_ec_operator_reschedule_appointment', array( $this, 'handle_operator_reschedule_appointment' ) );
+		add_action( 'admin_post_ec_client_update_quotation_status', array( $this, 'handle_client_update_quotation_status' ) );
 		add_action( 'comment_post', array( $this, 'notify_service_order_comment' ), 10, 3 );
 	}
 
@@ -1218,6 +1219,7 @@ class EC_Core {
 			return '<p>' . esc_html__( 'Debes iniciar sesión para ver tus cotizaciones.', 'electrocam-crm' ) . '</p>';
 		}
 
+		$message = $this->get_quotation_feedback_message();
 		$filter_status = sanitize_key( (string) $atts['status'] );
 		$show_expired = 'no' !== strtolower( (string) $atts['show_expired'] );
 
@@ -1243,10 +1245,11 @@ class EC_Core {
 		);
 
 		if ( empty( $quotations ) ) {
-			return '<p>' . esc_html__( 'No tienes cotizaciones registradas.', 'electrocam-crm' ) . '</p>';
+			return $message . '<p>' . esc_html__( 'No tienes cotizaciones registradas.', 'electrocam-crm' ) . '</p>';
 		}
 
-		$output = '<ul class="ec-client-list ec-client-quotations">';
+		$output = $message;
+		$output .= '<ul class="ec-client-list ec-client-quotations">';
 		$has_results = false;
 
 		foreach ( $quotations as $quotation ) {
@@ -1277,13 +1280,25 @@ class EC_Core {
 			$output .= esc_html__( 'Subtotal:', 'electrocam-crm' ) . ' $' . esc_html( number_format_i18n( $subtotal, 2 ) ) . ' · ';
 			$output .= esc_html__( 'IVA:', 'electrocam-crm' ) . ' ' . esc_html( number_format_i18n( $tax_rate, 2 ) ) . '% · ';
 			$output .= esc_html__( 'Total:', 'electrocam-crm' ) . ' $' . esc_html( number_format_i18n( $total, 2 ) ) . '<br>';
-			$output .= esc_html__( 'Vigencia:', 'electrocam-crm' ) . ' ' . esc_html( $valid_until ) . '</li>';
+			$output .= esc_html__( 'Vigencia:', 'electrocam-crm' ) . ' ' . esc_html( $valid_until );
+
+			if ( 'sent' === $status ) {
+				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-quotation-action-form">';
+				$output .= '<input type="hidden" name="action" value="ec_client_update_quotation_status">';
+				$output .= '<input type="hidden" name="quotation_id" value="' . esc_attr( $quotation->ID ) . '">';
+				$output .= wp_nonce_field( 'ec_client_update_quotation_' . $quotation->ID, 'ec_client_update_quotation_nonce', true, false );
+				$output .= '<button type="submit" name="new_status" value="approved">' . esc_html__( 'Aprobar', 'electrocam-crm' ) . '</button> ';
+				$output .= '<button type="submit" name="new_status" value="rejected">' . esc_html__( 'Rechazar', 'electrocam-crm' ) . '</button>';
+				$output .= '</form>';
+			}
+
+			$output .= '</li>';
 		}
 
 		$output .= '</ul>';
 
 		if ( ! $has_results ) {
-			return '<p>' . esc_html__( 'No hay cotizaciones para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
+			return $message . '<p>' . esc_html__( 'No hay cotizaciones para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
 		}
 
 		return $output;
@@ -1535,6 +1550,72 @@ class EC_Core {
 		return $output;
 	}
 
+
+
+	/**
+	 * Procesa actualización de estado de cotización desde portal cliente.
+	 *
+	 * @return void
+	 */
+	public function handle_client_update_quotation_status() {
+		if ( ! is_user_logged_in() ) {
+			wp_safe_redirect( wp_get_referer() ? wp_get_referer() : home_url( '/' ) );
+			exit;
+		}
+
+		$quotation_id = isset( $_POST['quotation_id'] ) ? absint( wp_unslash( $_POST['quotation_id'] ) ) : 0;
+		$new_status = isset( $_POST['new_status'] ) ? sanitize_key( wp_unslash( $_POST['new_status'] ) ) : '';
+		$nonce = isset( $_POST['ec_client_update_quotation_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['ec_client_update_quotation_nonce'] ) ) : '';
+		$redirect_url = wp_get_referer() ? wp_get_referer() : home_url( '/' );
+
+		if ( ! $quotation_id || ! wp_verify_nonce( $nonce, 'ec_client_update_quotation_' . $quotation_id ) ) {
+			wp_die( esc_html__( 'Solicitud inválida.', 'electrocam-crm' ) );
+		}
+
+		$current_user_id = get_current_user_id();
+		$client_id = (int) get_post_meta( $quotation_id, 'ec_client_id', true );
+		$current_status = (string) get_post_meta( $quotation_id, 'ec_quotation_status', true );
+
+		if ( $current_user_id !== $client_id ) {
+			wp_die( esc_html__( 'No tienes permisos para modificar esta cotización.', 'electrocam-crm' ) );
+		}
+
+		if ( 'sent' !== $current_status ) {
+			wp_safe_redirect( add_query_arg( 'ec_quotation_error', 'invalid_transition', $redirect_url ) );
+			exit;
+		}
+
+		if ( ! in_array( $new_status, array( 'approved', 'rejected' ), true ) ) {
+			wp_safe_redirect( add_query_arg( 'ec_quotation_error', 'invalid_transition', $redirect_url ) );
+			exit;
+		}
+
+		update_post_meta( $quotation_id, 'ec_quotation_status', $new_status );
+		update_post_meta( $quotation_id, 'ec_client_status_updated_at', gmdate( 'Y-m-d H:i:s' ) );
+
+		wp_safe_redirect( add_query_arg( 'ec_quotation_updated', '1', $redirect_url ) );
+		exit;
+	}
+
+	/**
+	 * Construye mensaje de feedback para acciones de cotización.
+	 *
+	 * @return string
+	 */
+	private function get_quotation_feedback_message() {
+		if ( isset( $_GET['ec_quotation_updated'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['ec_quotation_updated'] ) ) ) {
+			return '<p class="ec-success-message">' . esc_html__( 'La cotización fue actualizada correctamente.', 'electrocam-crm' ) . '</p>';
+		}
+
+		if ( isset( $_GET['ec_quotation_error'] ) ) {
+			$error = sanitize_text_field( wp_unslash( $_GET['ec_quotation_error'] ) );
+			if ( 'invalid_transition' === $error ) {
+				return '<p class="ec-error-message">' . esc_html__( 'No se pudo cambiar el estado de la cotización.', 'electrocam-crm' ) . '</p>';
+			}
+		}
+
+		return '';
+	}
 
 	/**
 	 * Procesa solicitud de reprogramación enviada por operario.
