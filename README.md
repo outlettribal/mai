@@ -65,6 +65,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 43. Paginación cliente/operario ajustada para detectar correctamente página siguiente (`limit + 1`).
 44. Navegación de paginación conserva filtros activos (`status`, `show_expired`, `limit`) en cliente y operario.
 45. Paginación básica (limit/page + Anterior/Siguiente) añadida también a shortcodes de órdenes de cliente y operario.
+46. Enlaces de paginación de órdenes ahora conservan `limit` al navegar entre páginas (cliente/operario).
 
 ## Estructura
 
@@ -100,6 +101,6 @@ electrocam-crm/
 - Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **99%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **90%**
-- Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **96%**
+- Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **97%**
 - PDF y correo automático: **10%**
 - Conversación/comentarios y notificaciones: **79%**
