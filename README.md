@@ -47,6 +47,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 25. Campo opcional de correo secundario (CC) para notificaciones y auditoría de envíos.
 26. Validación del correo CC en ajustes con mensajes de error visibles en wp-admin.
 27. Validación del correo principal de soporte y visualización de auditoría de correos en metabox de citas.
+28. Límite configurable de retención de auditoría (10-500) aplicado a historial de correos y reprogramaciones.
 
 ## Estructura
 
@@ -77,11 +78,11 @@ electrocam-crm/
 
 ## Avance estimado del proyecto
 
-- Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **94%**
+- Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **95%**
 - Módulo de órdenes de servicio (metabox, guardado, consecutivo, cita de control): **70%**
 - Módulo de cotizaciones (metabox + totales básicos): **45%**
 - Módulo de inventario (metabox + persistencia): **40%**
-- Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **88%**
+- Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **90%**
 - Portal cliente frontend (shortcodes listados + reprogramación inicial): **68%**
 - PDF y correo automático: **10%**
-- Conversación/comentarios y notificaciones: **68%**
+- Conversación/comentarios y notificaciones: **70%**

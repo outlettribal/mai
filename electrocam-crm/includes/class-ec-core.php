@@ -46,6 +46,9 @@ class EC_Core {
 		if ( false === get_option( 'ec_notification_cc_email', false ) ) {
 			update_option( 'ec_notification_cc_email', '' );
 		}
+		if ( false === get_option( 'ec_audit_retention_limit', false ) ) {
+			update_option( 'ec_audit_retention_limit', 50 );
+		}
 		flush_rewrite_rules();
 	}
 
@@ -904,6 +907,16 @@ class EC_Core {
 				'default'           => '',
 			)
 		);
+
+		register_setting(
+			'ec_settings_group',
+			'ec_audit_retention_limit',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => array( $this, 'sanitize_audit_retention_limit' ),
+				'default'           => 50,
+			)
+		);
 	}
 
 	/**
@@ -933,6 +946,13 @@ class EC_Core {
 						<td>
 							<input type="email" id="ec_notification_cc_email" name="ec_notification_cc_email" value="<?php echo esc_attr( get_option( 'ec_notification_cc_email', '' ) ); ?>" class="regular-text">
 							<p class="description"><?php esc_html_e( 'Opcional. Recibe copia de notificaciones de reprogramación y comentarios.', 'electrocam-crm' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="ec_audit_retention_limit"><?php esc_html_e( 'Límite de auditoría', 'electrocam-crm' ); ?></label></th>
+						<td>
+							<input type="number" id="ec_audit_retention_limit" name="ec_audit_retention_limit" value="<?php echo esc_attr( (int) get_option( 'ec_audit_retention_limit', 50 ) ); ?>" min="10" max="500" step="1" class="small-text">
+							<p class="description"><?php esc_html_e( 'Cantidad máxima de registros que se conservarán en historiales de auditoría y reprogramación.', 'electrocam-crm' ); ?></p>
 						</td>
 					</tr>
 				</table>
@@ -992,6 +1012,25 @@ class EC_Core {
 		}
 
 		return $sanitized;
+	}
+
+
+	/**
+	 * Sanitiza límite de retención de auditoría.
+	 *
+	 * @param mixed $value Valor recibido.
+	 * @return int
+	 */
+	public function sanitize_audit_retention_limit( $value ) {
+		$limit = absint( $value );
+		if ( $limit < 10 ) {
+			$limit = 10;
+		}
+		if ( $limit > 500 ) {
+			$limit = 500;
+		}
+
+		return $limit;
 	}
 
 	/**
@@ -1564,6 +1603,11 @@ class EC_Core {
 			'sent_at'    => sanitize_text_field( $sent_at ),
 		);
 
+		$limit = (int) get_option( 'ec_audit_retention_limit', 50 );
+		if ( $limit > 0 && count( $audit ) > $limit ) {
+			$audit = array_slice( $audit, -$limit );
+		}
+
 		update_post_meta( $post_id, 'ec_email_audit', $audit );
 	}
 
@@ -1591,6 +1635,11 @@ class EC_Core {
 			'user_id'    => absint( $user_id ),
 			'changed_at' => gmdate( 'Y-m-d H:i:s' ),
 		);
+
+		$limit = (int) get_option( 'ec_audit_retention_limit', 50 );
+		if ( $limit > 0 && count( $history ) > $limit ) {
+			$history = array_slice( $history, -$limit );
+		}
 
 		update_post_meta( $appointment_id, 'ec_reschedule_history', $history );
 	}
