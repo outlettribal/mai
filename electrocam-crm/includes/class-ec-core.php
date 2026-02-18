@@ -1150,33 +1150,12 @@ class EC_Core {
 		$service_order_id = (int) get_post_meta( $appointment_id, 'ec_service_order_id', true );
 		$current_user_id = get_current_user_id();
 		$operator_id = $service_order_id ? (int) get_post_meta( $service_order_id, 'ec_operator_id', true ) : 0;
-		$redirect_url = wp_get_referer() ? wp_get_referer() : home_url( '/' );
 
 		if ( $current_user_id !== $operator_id && ! current_user_can( 'edit_others_ec_appointments' ) ) {
 			wp_die( esc_html__( 'No tienes permisos para modificar esta cita.', 'electrocam-crm' ) );
 		}
 
-		if ( ! $this->is_valid_date_time( $new_date, $new_time ) ) {
-			wp_safe_redirect( add_query_arg( 'ec_appointment_error', 'invalid_datetime', $redirect_url ) );
-			exit;
-		}
-
-		if ( ! $this->is_appointment_slot_available( $new_date, $new_time, $appointment_id ) ) {
-			wp_safe_redirect( add_query_arg( 'ec_appointment_error', 'slot_unavailable', $redirect_url ) );
-			exit;
-		}
-
-		$old_date = (string) get_post_meta( $appointment_id, 'ec_appointment_date', true );
-		$old_time = (string) get_post_meta( $appointment_id, 'ec_appointment_time', true );
-
-		update_post_meta( $appointment_id, 'ec_appointment_date', $new_date );
-		update_post_meta( $appointment_id, 'ec_appointment_time', $new_time );
-		update_post_meta( $appointment_id, 'ec_status', 'scheduled' );
-		$this->append_appointment_reschedule_history( $appointment_id, $old_date, $old_time, $new_date, $new_time, $current_user_id );
-		$this->send_appointment_reschedule_email( $appointment_id, $new_date, $new_time );
-
-		wp_safe_redirect( add_query_arg( 'ec_appointment_updated', '1', $redirect_url ) );
-		exit;
+		$this->process_appointment_reschedule( $appointment_id, $new_date, $new_time, $current_user_id );
 	}
 
 	/**
@@ -1201,11 +1180,25 @@ class EC_Core {
 
 		$current_user_id = get_current_user_id();
 		$appointment_client_id = (int) get_post_meta( $appointment_id, 'ec_client_id', true );
-		$redirect_url = wp_get_referer() ? wp_get_referer() : home_url( '/' );
 
 		if ( $current_user_id !== $appointment_client_id ) {
 			wp_die( esc_html__( 'No tienes permisos para modificar esta cita.', 'electrocam-crm' ) );
 		}
+
+		$this->process_appointment_reschedule( $appointment_id, $new_date, $new_time, $current_user_id );
+	}
+
+	/**
+	 * Ejecuta el flujo de reprogramación de cita compartido.
+	 *
+	 * @param int    $appointment_id ID cita.
+	 * @param string $new_date       Nueva fecha.
+	 * @param string $new_time       Nueva hora.
+	 * @param int    $current_user_id Usuario que ejecuta.
+	 * @return void
+	 */
+	private function process_appointment_reschedule( $appointment_id, $new_date, $new_time, $current_user_id ) {
+		$redirect_url = wp_get_referer() ? wp_get_referer() : home_url( '/' );
 
 		if ( ! $this->is_valid_date_time( $new_date, $new_time ) ) {
 			wp_safe_redirect( add_query_arg( 'ec_appointment_error', 'invalid_datetime', $redirect_url ) );
@@ -1229,7 +1222,6 @@ class EC_Core {
 		wp_safe_redirect( add_query_arg( 'ec_appointment_updated', '1', $redirect_url ) );
 		exit;
 	}
-
 
 
 	/**
