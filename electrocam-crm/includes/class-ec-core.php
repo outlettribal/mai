@@ -1179,7 +1179,7 @@ class EC_Core {
 			array(
 				'post_type'      => 'service_order',
 				'post_status'    => array( 'publish', 'private' ),
-				'posts_per_page' => 50,
+				'posts_per_page' => $limit,
 				'orderby'        => 'date',
 				'order'          => 'DESC',
 				'meta_query'     => array(
@@ -1239,6 +1239,7 @@ class EC_Core {
 			array(
 				'status' => '',
 				'show_expired' => 'yes',
+				'limit' => 50,
 			),
 			$atts,
 			'ec_client_quotations'
@@ -1251,6 +1252,7 @@ class EC_Core {
 		$message = $this->get_quotation_feedback_message();
 		$filter_status = sanitize_key( (string) $atts['status'] );
 		$show_expired = 'no' !== strtolower( (string) $atts['show_expired'] );
+		$limit = max( 1, min( 200, absint( $atts['limit'] ) ) );
 
 		$allowed_filter_statuses = array( 'draft', 'sent', 'approved', 'rejected', 'expired' );
 		if ( $filter_status && ! in_array( $filter_status, $allowed_filter_statuses, true ) ) {
@@ -1261,7 +1263,7 @@ class EC_Core {
 			array(
 				'post_type'      => 'quotation',
 				'post_status'    => array( 'publish', 'private' ),
-				'posts_per_page' => 50,
+				'posts_per_page' => $limit,
 				'orderby'        => 'date',
 				'order'          => 'DESC',
 				'meta_query'     => array(
@@ -1352,7 +1354,7 @@ class EC_Core {
 			array(
 				'post_type'      => 'appointment',
 				'post_status'    => array( 'publish', 'private' ),
-				'posts_per_page' => 50,
+				'posts_per_page' => $limit,
 				'orderby'        => 'date',
 				'order'          => 'DESC',
 				'meta_query'     => array(
@@ -1456,6 +1458,7 @@ class EC_Core {
 			array(
 				'status' => '',
 				'show_expired' => 'yes',
+				'limit' => 50,
 			),
 			$atts,
 			'ec_operator_quotations'
@@ -1471,6 +1474,7 @@ class EC_Core {
 
 		$filter_status = sanitize_key( (string) $atts['status'] );
 		$show_expired = 'no' !== strtolower( (string) $atts['show_expired'] );
+		$limit = max( 1, min( 200, absint( $atts['limit'] ) ) );
 		$allowed_filter_statuses = array( 'draft', 'sent', 'approved', 'rejected', 'expired' );
 		if ( $filter_status && ! in_array( $filter_status, $allowed_filter_statuses, true ) ) {
 			$filter_status = '';
@@ -1480,7 +1484,7 @@ class EC_Core {
 			array(
 				'post_type'      => 'quotation',
 				'post_status'    => array( 'publish', 'private' ),
-				'posts_per_page' => 50,
+				'posts_per_page' => $limit,
 				'orderby'        => 'date',
 				'order'          => 'DESC',
 				'meta_query'     => array(

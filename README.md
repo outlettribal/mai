@@ -59,6 +59,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 37. Captura de comentario opcional del cliente al aprobar/rechazar cotización y envío en notificación por correo.
 38. Visualización de notas de cliente en historial de estados (admin) y en listado de cotizaciones del operario.
 39. Filtros por estado y vencimiento también en shortcode de cotizaciones de operario (`[ec_operator_quotations status="..."]`, `show_expired`).
+40. Parámetro `limit` en shortcodes de cotizaciones de cliente y operario para controlar cantidad de resultados (1-200).
 
 ## Estructura
 
@@ -91,9 +92,9 @@ electrocam-crm/
 
 - Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **97%**
 - Módulo de órdenes de servicio (metabox, guardado, consecutivo, cita de control): **70%**
-- Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **97%**
+- Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **98%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **90%**
-- Portal cliente/frontend operativo (shortcodes + acciones + filtros): **89%**
+- Portal cliente/frontend operativo (shortcodes + acciones + filtros): **90%**
 - PDF y correo automático: **10%**
 - Conversación/comentarios y notificaciones: **79%**
