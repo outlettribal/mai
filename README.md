@@ -44,6 +44,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 22. Historial breve visible en frontend (cliente/operario) y auditoría de envío de correo de reprogramación.
 23. Correo de soporte configurable (`ec_support_email`) con fallback a `servicioalcliente@electrocam.com` y auditoría de envíos por post.
 24. Pantalla de ajustes en wp-admin para editar correo de soporte sin tocar base de datos.
+25. Campo opcional de correo secundario (CC) para notificaciones y auditoría de envíos.
 
 ## Estructura
 
@@ -74,11 +75,11 @@ electrocam-crm/
 
 ## Avance estimado del proyecto
 
-- Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **90%**
+- Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **92%**
 - Módulo de órdenes de servicio (metabox, guardado, consecutivo, cita de control): **70%**
 - Módulo de cotizaciones (metabox + totales básicos): **45%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **88%**
 - Portal cliente frontend (shortcodes listados + reprogramación inicial): **68%**
 - PDF y correo automático: **10%**
-- Conversación/comentarios y notificaciones: **58%**
+- Conversación/comentarios y notificaciones: **62%**

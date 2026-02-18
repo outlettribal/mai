@@ -43,6 +43,9 @@ class EC_Core {
 		if ( ! get_option( 'ec_support_email' ) ) {
 			update_option( 'ec_support_email', 'servicioalcliente@electrocam.com' );
 		}
+		if ( false === get_option( 'ec_notification_cc_email', false ) ) {
+			update_option( 'ec_notification_cc_email', '' );
+		}
 		flush_rewrite_rules();
 	}
 
@@ -876,6 +879,16 @@ class EC_Core {
 				'default'           => 'servicioalcliente@electrocam.com',
 			)
 		);
+
+		register_setting(
+			'ec_settings_group',
+			'ec_notification_cc_email',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_email',
+				'default'           => '',
+			)
+		);
 	}
 
 	/**
@@ -898,6 +911,13 @@ class EC_Core {
 						<td>
 							<input type="email" id="ec_support_email" name="ec_support_email" value="<?php echo esc_attr( get_option( 'ec_support_email', 'servicioalcliente@electrocam.com' ) ); ?>" class="regular-text" required>
 							<p class="description"><?php esc_html_e( 'Se usa para copias y auditoría de notificaciones del plugin.', 'electrocam-crm' ); ?></p>
+						</td>
+					</tr>
+					<tr>
+						<th scope="row"><label for="ec_notification_cc_email"><?php esc_html_e( 'Correo secundario (CC)', 'electrocam-crm' ); ?></label></th>
+						<td>
+							<input type="email" id="ec_notification_cc_email" name="ec_notification_cc_email" value="<?php echo esc_attr( get_option( 'ec_notification_cc_email', '' ) ); ?>" class="regular-text">
+							<p class="description"><?php esc_html_e( 'Opcional. Recibe copia de notificaciones de reprogramación y comentarios.', 'electrocam-crm' ); ?></p>
 						</td>
 					</tr>
 				</table>
@@ -1382,6 +1402,11 @@ class EC_Core {
 			$recipients[] = $support_email;
 		}
 
+		$cc_email = $this->get_notification_cc_email();
+		if ( ! empty( $cc_email ) ) {
+			$recipients[] = $cc_email;
+		}
+
 		$recipients = array_unique( array_filter( $recipients ) );
 
 		if ( empty( $recipients ) ) {
@@ -1421,6 +1446,18 @@ class EC_Core {
 		}
 
 		return $support_email;
+	}
+
+	/**
+	 * Obtiene correo opcional de copia (CC) para notificaciones.
+	 *
+	 * @return string
+	 */
+	private function get_notification_cc_email() {
+		$cc_email = get_option( 'ec_notification_cc_email', '' );
+		$cc_email = is_string( $cc_email ) ? sanitize_email( $cc_email ) : '';
+
+		return $cc_email;
 	}
 
 	/**
@@ -1516,6 +1553,11 @@ class EC_Core {
 		$admin_email = get_option( 'admin_email' );
 		if ( ! empty( $admin_email ) ) {
 			$recipients[] = $admin_email;
+		}
+
+		$cc_email = $this->get_notification_cc_email();
+		if ( ! empty( $cc_email ) ) {
+			$recipients[] = $cc_email;
 		}
 
 		$recipients = array_unique( array_filter( $recipients ) );
