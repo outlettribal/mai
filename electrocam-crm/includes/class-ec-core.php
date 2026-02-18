@@ -71,6 +71,8 @@ class EC_Core {
 		add_action( 'save_post_inventory_item', array( $this, 'save_inventory_item_meta' ), 10, 2 );
 		add_action( 'save_post_appointment', array( $this, 'save_appointment_meta' ), 10, 2 );
 		add_action( 'admin_notices', array( $this, 'render_admin_notices' ) );
+		add_action( 'admin_menu', array( $this, 'register_settings_page' ) );
+		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_shortcode( 'ec_client_orders', array( $this, 'render_client_orders_shortcode' ) );
 		add_shortcode( 'ec_client_quotations', array( $this, 'render_client_quotations_shortcode' ) );
 		add_shortcode( 'ec_client_appointments', array( $this, 'render_client_appointments_shortcode' ) );
@@ -842,6 +844,68 @@ class EC_Core {
 		return empty( get_posts( $query ) );
 	}
 
+
+
+	/**
+	 * Registra página de ajustes del plugin.
+	 *
+	 * @return void
+	 */
+	public function register_settings_page() {
+		add_options_page(
+			__( 'Electrocam CRM Ajustes', 'electrocam-crm' ),
+			__( 'Electrocam CRM', 'electrocam-crm' ),
+			'manage_options',
+			'electrocam-crm-settings',
+			array( $this, 'render_settings_page' )
+		);
+	}
+
+	/**
+	 * Registra settings del plugin.
+	 *
+	 * @return void
+	 */
+	public function register_settings() {
+		register_setting(
+			'ec_settings_group',
+			'ec_support_email',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => 'sanitize_email',
+				'default'           => 'servicioalcliente@electrocam.com',
+			)
+		);
+	}
+
+	/**
+	 * Renderiza página de ajustes.
+	 *
+	 * @return void
+	 */
+	public function render_settings_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Ajustes Electrocam CRM', 'electrocam-crm' ); ?></h1>
+			<form method="post" action="options.php">
+				<?php settings_fields( 'ec_settings_group' ); ?>
+				<table class="form-table" role="presentation">
+					<tr>
+						<th scope="row"><label for="ec_support_email"><?php esc_html_e( 'Correo de soporte', 'electrocam-crm' ); ?></label></th>
+						<td>
+							<input type="email" id="ec_support_email" name="ec_support_email" value="<?php echo esc_attr( get_option( 'ec_support_email', 'servicioalcliente@electrocam.com' ) ); ?>" class="regular-text" required>
+							<p class="description"><?php esc_html_e( 'Se usa para copias y auditoría de notificaciones del plugin.', 'electrocam-crm' ); ?></p>
+						</td>
+					</tr>
+				</table>
+				<?php submit_button(); ?>
+			</form>
+		</div>
+		<?php
+	}
 
 	/**
 	 * Renderiza listado de órdenes para cliente autenticado.
