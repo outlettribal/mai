@@ -507,6 +507,7 @@ class EC_Core {
 		$quotation_status = get_post_meta( $post->ID, 'ec_quotation_status', true );
 		$status_history = get_post_meta( $post->ID, 'ec_quotation_status_history', true );
 		$last_client_status_update = get_post_meta( $post->ID, 'ec_client_status_updated_at', true );
+		$last_client_status_note = get_post_meta( $post->ID, 'ec_client_status_note', true );
 		$quote_items = get_post_meta( $post->ID, 'ec_quote_items', true );
 		if ( ! is_array( $quote_items ) ) {
 			$quote_items = array();
@@ -579,6 +580,9 @@ class EC_Core {
 		</p>
 		<?php if ( ! empty( $last_client_status_update ) ) : ?>
 			<p><em><?php esc_html_e( 'Última actualización de estado por cliente:', 'electrocam-crm' ); ?> <?php echo esc_html( $last_client_status_update ); ?></em></p>
+		<?php endif; ?>
+		<?php if ( ! empty( $last_client_status_note ) ) : ?>
+			<p><em><?php esc_html_e( 'Nota del cliente:', 'electrocam-crm' ); ?> <?php echo esc_html( $last_client_status_note ); ?></em></p>
 		<?php endif; ?>
 		<?php if ( is_array( $status_history ) && ! empty( $status_history ) ) : ?>
 			<p><strong><?php esc_html_e( 'Historial de estados (últimos cambios)', 'electrocam-crm' ); ?></strong></p>
@@ -845,7 +849,7 @@ class EC_Core {
 		update_post_meta( $post_id, 'ec_terms_conditions', $terms );
 
 		if ( $previous_status && $previous_status !== $quotation_status ) {
-			$this->append_quotation_status_history( $post_id, $previous_status, $quotation_status, get_current_user_id() );
+			$this->append_quotation_status_history( $post_id, $previous_status, $quotation_status, get_current_user_id(), '' );
 		}
 
 		update_post_meta( $post_id, 'ec_quotation_status', $quotation_status );
@@ -1307,6 +1311,7 @@ class EC_Core {
 				$output .= '<input type="hidden" name="action" value="ec_client_update_quotation_status">';
 				$output .= '<input type="hidden" name="quotation_id" value="' . esc_attr( $quotation->ID ) . '">';
 				$output .= wp_nonce_field( 'ec_client_update_quotation_' . $quotation->ID, 'ec_client_update_quotation_nonce', true, false );
+				$output .= '<label>' . esc_html__( 'Comentario (opcional)', 'electrocam-crm' ) . ' <textarea name="status_note" rows="2" maxlength="300"></textarea></label><br>';
 				$output .= '<button type="submit" name="new_status" value="approved">' . esc_html__( 'Aprobar', 'electrocam-crm' ) . '</button> ';
 				$output .= '<button type="submit" name="new_status" value="rejected">' . esc_html__( 'Rechazar', 'electrocam-crm' ) . '</button>';
 				$output .= '</form>';
@@ -1585,6 +1590,7 @@ class EC_Core {
 
 		$quotation_id = isset( $_POST['quotation_id'] ) ? absint( wp_unslash( $_POST['quotation_id'] ) ) : 0;
 		$new_status = isset( $_POST['new_status'] ) ? sanitize_key( wp_unslash( $_POST['new_status'] ) ) : '';
+		$status_note = isset( $_POST['status_note'] ) ? sanitize_textarea_field( wp_unslash( $_POST['status_note'] ) ) : '';
 		$nonce = isset( $_POST['ec_client_update_quotation_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['ec_client_update_quotation_nonce'] ) ) : '';
 		$redirect_url = wp_get_referer() ? wp_get_referer() : home_url( '/' );
 
@@ -1610,10 +1616,11 @@ class EC_Core {
 			exit;
 		}
 
-		$this->append_quotation_status_history( $quotation_id, $current_status, $new_status, $current_user_id );
+		$this->append_quotation_status_history( $quotation_id, $current_status, $new_status, $current_user_id, $status_note );
 		update_post_meta( $quotation_id, 'ec_quotation_status', $new_status );
 		update_post_meta( $quotation_id, 'ec_client_status_updated_at', gmdate( 'Y-m-d H:i:s' ) );
-		$this->send_quotation_status_update_email( $quotation_id, $new_status );
+		update_post_meta( $quotation_id, 'ec_client_status_note', $status_note );
+		$this->send_quotation_status_update_email( $quotation_id, $new_status, $status_note );
 
 		wp_safe_redirect( add_query_arg( 'ec_quotation_updated', '1', $redirect_url ) );
 		exit;
@@ -1648,9 +1655,10 @@ class EC_Core {
 	 * @param string $from_status  Estado anterior.
 	 * @param string $to_status    Estado nuevo.
 	 * @param int    $user_id      Usuario que realiza el cambio.
+	 * @param string $note         Nota opcional del cambio.
 	 * @return void
 	 */
-	private function append_quotation_status_history( $quotation_id, $from_status, $to_status, $user_id ) {
+	private function append_quotation_status_history( $quotation_id, $from_status, $to_status, $user_id, $note = '' ) {
 		$history = get_post_meta( $quotation_id, 'ec_quotation_status_history', true );
 		if ( ! is_array( $history ) ) {
 			$history = array();
@@ -1660,6 +1668,7 @@ class EC_Core {
 			'from' => sanitize_key( $from_status ),
 			'to' => sanitize_key( $to_status ),
 			'user_id' => absint( $user_id ),
+			'note' => sanitize_textarea_field( $note ),
 			'changed_at' => gmdate( 'Y-m-d H:i:s' ),
 		);
 
@@ -1676,9 +1685,10 @@ class EC_Core {
 	 *
 	 * @param int    $quotation_id ID de cotización.
 	 * @param string $new_status   Nuevo estado.
+	 * @param string $status_note  Nota opcional del cliente.
 	 * @return void
 	 */
-	private function send_quotation_status_update_email( $quotation_id, $new_status ) {
+	private function send_quotation_status_update_email( $quotation_id, $new_status, $status_note = '' ) {
 		$client_id = (int) get_post_meta( $quotation_id, 'ec_client_id', true );
 		$operator_id = (int) get_post_meta( $quotation_id, 'ec_operator_id', true );
 		$recipients = array();
@@ -1722,6 +1732,10 @@ class EC_Core {
 			get_the_title( $quotation_id ),
 			$status_label
 		);
+
+		if ( ! empty( $status_note ) ) {
+			$message .= "\n\n" . __( 'Comentario del cliente:', 'electrocam-crm' ) . "\n" . $status_note;
+		}
 
 		$sent = wp_mail( $recipients, $subject, $message );
 		if ( $sent ) {

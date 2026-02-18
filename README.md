@@ -56,6 +56,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 34. Notificación por correo y auditoría cuando cliente cambia estado de cotización (aprobada/rechazada).
 35. Historial de cambios de estado de cotización (`ec_quotation_status_history`) visible en admin con último cambio por cliente.
 36. Trazabilidad de cambios de estado también desde edición en wp-admin (no solo desde portal cliente).
+37. Captura de comentario opcional del cliente al aprobar/rechazar cotización y envío en notificación por correo.
 
 ## Estructura
 
@@ -88,9 +89,9 @@ electrocam-crm/
 
 - Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **97%**
 - Módulo de órdenes de servicio (metabox, guardado, consecutivo, cita de control): **70%**
-- Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **93%**
+- Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **95%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **90%**
-- Portal cliente frontend (shortcodes + acciones de cita + acciones de cotización): **84%**
+- Portal cliente frontend (shortcodes + acciones de cita + acciones de cotización): **86%**
 - PDF y correo automático: **10%**
 - Conversación/comentarios y notificaciones: **78%**
