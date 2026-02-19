@@ -117,6 +117,8 @@ class EC_Core {
 				}
 				$reminder_timestamp = $appointment_timestamp - ( $lead_hours * HOUR_IN_SECONDS );
 				if ( $reminder_timestamp <= (int) current_time( 'timestamp', true ) ) {
+					wp_clear_scheduled_hook( 'ec_send_appointment_reminder', array( (int) $appointment_id ) );
+					delete_post_meta( (int) $appointment_id, 'ec_reminder_scheduled_for' );
 					continue;
 				}
 
