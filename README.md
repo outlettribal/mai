@@ -94,6 +94,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 72. Endurecimiento de seguridad: validación explícita de tipo de post (`quotation`/`appointment`) en handlers frontend antes de mutar metadatos.
 73. Endurecimiento adicional en recordatorios: validación de tipo `appointment` antes de programar o enviar recordatorios automáticos por cron.
 74. Auto-limpieza en ejecución de cron: si la cita ya no está `scheduled` o su fecha/hora es inválida, se elimina el recordatorio pendiente y su meta programada.
+75. Al enviarse exitosamente un recordatorio por cron, se limpia `ec_reminder_scheduled_for` para evitar mostrar programación vencida en vistas admin/frontend.
 
 ## Estructura
 
