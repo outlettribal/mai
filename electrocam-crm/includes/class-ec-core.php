@@ -1283,7 +1283,15 @@ class EC_Core {
 	 * @return string
 	 */
 	public function sanitize_enable_reminders( $value ) {
-		return 'yes' === (string) $value ? 'yes' : 'no';
+		$enabled = 'yes' === (string) $value ? 'yes' : 'no';
+
+		if ( 'no' === $enabled ) {
+			wp_clear_scheduled_hook( 'ec_send_appointment_reminder' );
+		} else {
+			self::schedule_existing_appointment_reminders();
+		}
+
+		return $enabled;
 	}
 
 	/**
