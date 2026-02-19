@@ -795,6 +795,8 @@ class EC_Core {
 				<?php endforeach; ?>
 			</select>
 		</p>
+		<?php $reminder_scheduled_for = (string) get_post_meta( $post->ID, 'ec_reminder_scheduled_for', true ); ?>
+		<p><strong><?php esc_html_e( 'Próximo recordatorio programado', 'electrocam-crm' ); ?>:</strong> <?php echo $reminder_scheduled_for ? esc_html( $reminder_scheduled_for . ' UTC' ) : esc_html__( 'No programado', 'electrocam-crm' ); ?></p>
 		<hr>
 		<p><strong><?php esc_html_e( 'Historial de reprogramaciones', 'electrocam-crm' ); ?></strong></p>
 		<?php if ( ! empty( $reschedule_history ) && is_array( $reschedule_history ) ) : ?>
@@ -1769,7 +1771,11 @@ class EC_Core {
 			$date = get_post_meta( $appointment->ID, 'ec_appointment_date', true );
 			$time = get_post_meta( $appointment->ID, 'ec_appointment_time', true );
 			$status = get_post_meta( $appointment->ID, 'ec_status', true );
+			$reminder_scheduled_for = (string) get_post_meta( $appointment->ID, 'ec_reminder_scheduled_for', true );
 			$output .= '<li><strong>' . esc_html( $appointment->post_title ) . '</strong> - ' . esc_html( $date ) . ' ' . esc_html( $time ) . ' - ' . esc_html( $status );
+			if ( ! empty( $reminder_scheduled_for ) ) {
+				$output .= '<br><small>' . esc_html__( 'Recordatorio programado:', 'electrocam-crm' ) . ' ' . esc_html( $reminder_scheduled_for ) . ' UTC</small>';
+			}
 			if ( 'completed' !== $status && 'cancelled' !== $status ) {
 				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-reschedule-form">';
 				$output .= '<input type="hidden" name="action" value="ec_client_reschedule_appointment">';
@@ -2220,7 +2226,11 @@ class EC_Core {
 			$date = get_post_meta( $appointment->ID, 'ec_appointment_date', true );
 			$time = get_post_meta( $appointment->ID, 'ec_appointment_time', true );
 			$status = get_post_meta( $appointment->ID, 'ec_status', true );
+			$reminder_scheduled_for = (string) get_post_meta( $appointment->ID, 'ec_reminder_scheduled_for', true );
 			$output .= '<li><strong>' . esc_html( $appointment->post_title ) . '</strong> - ' . esc_html( $date ) . ' ' . esc_html( $time ) . ' - ' . esc_html( $status );
+			if ( ! empty( $reminder_scheduled_for ) ) {
+				$output .= '<br><small>' . esc_html__( 'Recordatorio programado:', 'electrocam-crm' ) . ' ' . esc_html( $reminder_scheduled_for ) . ' UTC</small>';
+			}
 			if ( 'completed' !== $status && 'cancelled' !== $status ) {
 				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-reschedule-form">';
 				$output .= '<input type="hidden" name="action" value="ec_operator_reschedule_appointment">';

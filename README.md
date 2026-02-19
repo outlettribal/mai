@@ -82,6 +82,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 60. Al desactivar recordatorios (o desactivar el plugin) también se limpia el meta `ec_reminder_scheduled_for` para evitar trazas obsoletas.
 61. Procesamiento por lotes (paginado) al reprogramar/limpiar recordatorios en activación o desactivación, evitando tope fijo de 500 citas.
 62. El interruptor de recordatorios solo ejecuta mantenimiento (limpieza/reprogramación) cuando realmente cambia de estado, evitando trabajo redundante.
+63. Visibilidad del próximo recordatorio (`ec_reminder_scheduled_for`) en metabox de citas y listados frontend de cliente/operario.
 
 ## Estructura
 
@@ -117,6 +118,6 @@ electrocam-crm/
 - Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **99%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **100%**
-- Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **99%**
+- Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **100%**
 - PDF y correo automático: **10%**
 - Conversación/comentarios y notificaciones: **91%**
