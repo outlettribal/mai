@@ -119,6 +119,31 @@ class EC_Core {
 		}
 	}
 
+
+	/**
+	 * Elimina metadatos de programación de recordatorios para todas las citas.
+	 *
+	 * @return void
+	 */
+	private static function clear_all_appointment_reminder_metadata() {
+		$appointments = get_posts(
+			array(
+				'post_type'      => 'appointment',
+				'post_status'    => 'any',
+				'posts_per_page' => 500,
+				'fields'         => 'ids',
+			)
+		);
+
+		if ( empty( $appointments ) ) {
+			return;
+		}
+
+		foreach ( $appointments as $appointment_id ) {
+			delete_post_meta( (int) $appointment_id, 'ec_reminder_scheduled_for' );
+		}
+	}
+
 	/**
 	 * Hook de desactivación.
 	 *
@@ -126,6 +151,7 @@ class EC_Core {
 	 */
 	public static function deactivate() {
 		wp_clear_scheduled_hook( 'ec_send_appointment_reminder' );
+		self::clear_all_appointment_reminder_metadata();
 		flush_rewrite_rules();
 	}
 
@@ -1287,6 +1313,7 @@ class EC_Core {
 
 		if ( 'no' === $enabled ) {
 			wp_clear_scheduled_hook( 'ec_send_appointment_reminder' );
+			self::clear_all_appointment_reminder_metadata();
 		} else {
 			self::schedule_existing_appointment_reminders();
 		}
