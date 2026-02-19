@@ -2918,12 +2918,20 @@ class EC_Core {
 	 * @return string
 	 */
 	private function format_reminder_display_time( $utc_datetime ) {
+		if ( 'yes' !== get_option( 'ec_enable_reminders', 'yes' ) ) {
+			return __( 'Deshabilitado por configuración', 'electrocam-crm' );
+		}
+
 		$utc_datetime = is_string( $utc_datetime ) ? trim( $utc_datetime ) : '';
-		if ( empty( $utc_datetime ) ) {
+		if ( empty( $utc_datetime ) || ! preg_match( '/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$/', $utc_datetime ) ) {
 			return __( 'No programado', 'electrocam-crm' );
 		}
 
 		$local_datetime = get_date_from_gmt( $utc_datetime, 'Y-m-d H:i:s' );
+		if ( empty( $local_datetime ) ) {
+			return __( 'No programado', 'electrocam-crm' );
+		}
+
 		$timezone_label = wp_timezone_string();
 		if ( empty( $timezone_label ) ) {
 			$timezone_label = 'sitio';
