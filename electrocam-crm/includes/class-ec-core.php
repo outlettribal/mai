@@ -2995,7 +2995,7 @@ class EC_Core {
 			return;
 		}
 
-		if ( ! $appointment_id || ! $this->is_valid_date_time( $date, $time ) ) {
+		if ( ! $appointment_id || 'appointment' !== get_post_type( $appointment_id ) || ! $this->is_valid_date_time( $date, $time ) ) {
 			return;
 		}
 
@@ -3053,7 +3053,7 @@ class EC_Core {
 		}
 
 		$appointment_id = absint( $appointment_id );
-		if ( ! $appointment_id ) {
+		if ( ! $appointment_id || 'appointment' !== get_post_type( $appointment_id ) ) {
 			return;
 		}
 

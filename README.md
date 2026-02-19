@@ -92,6 +92,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 70. La ventana para mostrar “ahora” en recordatorios es configurable vía filtro `ec_reminder_now_window_seconds` (por defecto 60 segundos).
 71. La programación de recordatorios ahora calcula timestamps con zona horaria de WordPress (`wp_timezone`) y comparación UTC (`current_time(..., true)`) para evitar desfases de servidor.
 72. Endurecimiento de seguridad: validación explícita de tipo de post (`quotation`/`appointment`) en handlers frontend antes de mutar metadatos.
+73. Endurecimiento adicional en recordatorios: validación de tipo `appointment` antes de programar o enviar recordatorios automáticos por cron.
 
 ## Estructura
 
@@ -129,4 +130,4 @@ electrocam-crm/
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **100%**
 - Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **100%**
 - PDF y correo automático: **10%**
-- Conversación/comentarios y notificaciones: **99%**
+- Conversación/comentarios y notificaciones: **100%**
