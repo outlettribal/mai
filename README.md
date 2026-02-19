@@ -93,6 +93,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 71. La programación de recordatorios ahora calcula timestamps con zona horaria de WordPress (`wp_timezone`) y comparación UTC (`current_time(..., true)`) para evitar desfases de servidor.
 72. Endurecimiento de seguridad: validación explícita de tipo de post (`quotation`/`appointment`) en handlers frontend antes de mutar metadatos.
 73. Endurecimiento adicional en recordatorios: validación de tipo `appointment` antes de programar o enviar recordatorios automáticos por cron.
+74. Auto-limpieza en ejecución de cron: si la cita ya no está `scheduled` o su fecha/hora es inválida, se elimina el recordatorio pendiente y su meta programada.
 
 ## Estructura
 

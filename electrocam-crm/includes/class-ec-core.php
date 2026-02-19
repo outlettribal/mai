@@ -3059,12 +3059,14 @@ class EC_Core {
 
 		$status = (string) get_post_meta( $appointment_id, 'ec_status', true );
 		if ( 'scheduled' !== $status ) {
+			$this->clear_appointment_reminder( $appointment_id );
 			return;
 		}
 
 		$date = (string) get_post_meta( $appointment_id, 'ec_appointment_date', true );
 		$time = (string) get_post_meta( $appointment_id, 'ec_appointment_time', true );
 		if ( ! $this->is_valid_date_time( $date, $time ) ) {
+			$this->clear_appointment_reminder( $appointment_id );
 			return;
 		}
 
