@@ -1325,6 +1325,11 @@ class EC_Core {
 	 */
 	public function sanitize_enable_reminders( $value ) {
 		$enabled = 'yes' === (string) $value ? 'yes' : 'no';
+		$current = (string) get_option( 'ec_enable_reminders', 'yes' );
+
+		if ( $current === $enabled ) {
+			return $enabled;
+		}
 
 		if ( 'no' === $enabled ) {
 			wp_clear_scheduled_hook( 'ec_send_appointment_reminder' );
