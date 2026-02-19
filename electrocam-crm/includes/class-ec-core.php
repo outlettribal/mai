@@ -101,10 +101,12 @@ class EC_Core {
 					continue;
 				}
 
-				$appointment_timestamp = strtotime( $date . ' ' . $time );
-				if ( ! $appointment_timestamp ) {
+				$appointment_datetime = date_create_immutable_from_format( 'Y-m-d H:i', $date . ' ' . $time, wp_timezone() );
+				if ( ! $appointment_datetime ) {
 					continue;
 				}
+
+				$appointment_timestamp = $appointment_datetime->getTimestamp();
 
 				$lead_hours = (int) get_option( 'ec_reminder_lead_hours', 24 );
 				if ( $lead_hours < 1 ) {
@@ -114,7 +116,7 @@ class EC_Core {
 					$lead_hours = 168;
 				}
 				$reminder_timestamp = $appointment_timestamp - ( $lead_hours * HOUR_IN_SECONDS );
-				if ( $reminder_timestamp <= time() ) {
+				if ( $reminder_timestamp <= (int) current_time( 'timestamp', true ) ) {
 					continue;
 				}
 
@@ -2987,10 +2989,12 @@ class EC_Core {
 
 		$this->clear_appointment_reminder( $appointment_id );
 
-		$appointment_timestamp = strtotime( $date . ' ' . $time );
-		if ( ! $appointment_timestamp ) {
+		$appointment_datetime = date_create_immutable_from_format( 'Y-m-d H:i', $date . ' ' . $time, wp_timezone() );
+		if ( ! $appointment_datetime ) {
 			return;
 		}
+
+		$appointment_timestamp = $appointment_datetime->getTimestamp();
 
 		$lead_hours = (int) get_option( 'ec_reminder_lead_hours', 24 );
 		if ( $lead_hours < 1 ) {
@@ -3001,7 +3005,7 @@ class EC_Core {
 		}
 
 		$reminder_timestamp = $appointment_timestamp - ( $lead_hours * HOUR_IN_SECONDS );
-		if ( $reminder_timestamp <= time() ) {
+		if ( $reminder_timestamp <= (int) current_time( 'timestamp', true ) ) {
 			return;
 		}
 
