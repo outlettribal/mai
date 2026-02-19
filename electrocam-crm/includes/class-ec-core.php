@@ -49,7 +49,57 @@ class EC_Core {
 		if ( false === get_option( 'ec_audit_retention_limit', false ) ) {
 			update_option( 'ec_audit_retention_limit', 50 );
 		}
+		self::schedule_existing_appointment_reminders();
 		flush_rewrite_rules();
+	}
+
+
+	/**
+	 * Programa recordatorios para citas futuras ya existentes al activar el plugin.
+	 *
+	 * @return void
+	 */
+	private static function schedule_existing_appointment_reminders() {
+		$appointments = get_posts(
+			array(
+				'post_type'      => 'appointment',
+				'post_status'    => array( 'publish', 'private' ),
+				'posts_per_page' => 500,
+				'fields'         => 'ids',
+				'meta_query'     => array(
+					array(
+						'key'   => 'ec_status',
+						'value' => 'scheduled',
+					),
+				),
+			)
+		);
+
+		if ( empty( $appointments ) ) {
+			return;
+		}
+
+		foreach ( $appointments as $appointment_id ) {
+			$date = (string) get_post_meta( $appointment_id, 'ec_appointment_date', true );
+			$time = (string) get_post_meta( $appointment_id, 'ec_appointment_time', true );
+			if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) || ! preg_match( '/^\d{2}:\d{2}$/', $time ) ) {
+				continue;
+			}
+
+			$appointment_timestamp = strtotime( $date . ' ' . $time );
+			if ( ! $appointment_timestamp ) {
+				continue;
+			}
+
+			$reminder_timestamp = $appointment_timestamp - DAY_IN_SECONDS;
+			if ( $reminder_timestamp <= time() ) {
+				continue;
+			}
+
+			wp_clear_scheduled_hook( 'ec_send_appointment_reminder', array( (int) $appointment_id ) );
+			wp_schedule_single_event( $reminder_timestamp, 'ec_send_appointment_reminder', array( (int) $appointment_id ) );
+			update_post_meta( (int) $appointment_id, 'ec_reminder_scheduled_for', gmdate( 'Y-m-d H:i:s', $reminder_timestamp ) );
+		}
 	}
 
 	/**
