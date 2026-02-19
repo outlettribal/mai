@@ -796,7 +796,7 @@ class EC_Core {
 			</select>
 		</p>
 		<?php $reminder_scheduled_for = (string) get_post_meta( $post->ID, 'ec_reminder_scheduled_for', true ); ?>
-		<p><strong><?php esc_html_e( 'Próximo recordatorio programado', 'electrocam-crm' ); ?>:</strong> <?php echo $reminder_scheduled_for ? esc_html( $reminder_scheduled_for . ' UTC' ) : esc_html__( 'No programado', 'electrocam-crm' ); ?></p>
+		<p><strong><?php esc_html_e( 'Próximo recordatorio programado', 'electrocam-crm' ); ?>:</strong> <?php echo esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ); ?></p>
 		<hr>
 		<p><strong><?php esc_html_e( 'Historial de reprogramaciones', 'electrocam-crm' ); ?></strong></p>
 		<?php if ( ! empty( $reschedule_history ) && is_array( $reschedule_history ) ) : ?>
@@ -1774,7 +1774,7 @@ class EC_Core {
 			$reminder_scheduled_for = (string) get_post_meta( $appointment->ID, 'ec_reminder_scheduled_for', true );
 			$output .= '<li><strong>' . esc_html( $appointment->post_title ) . '</strong> - ' . esc_html( $date ) . ' ' . esc_html( $time ) . ' - ' . esc_html( $status );
 			if ( ! empty( $reminder_scheduled_for ) ) {
-				$output .= '<br><small>' . esc_html__( 'Recordatorio programado:', 'electrocam-crm' ) . ' ' . esc_html( $reminder_scheduled_for ) . ' UTC</small>';
+				$output .= '<br><small>' . esc_html__( 'Recordatorio programado:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ) . '</small>';
 			}
 			if ( 'completed' !== $status && 'cancelled' !== $status ) {
 				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-reschedule-form">';
@@ -2229,7 +2229,7 @@ class EC_Core {
 			$reminder_scheduled_for = (string) get_post_meta( $appointment->ID, 'ec_reminder_scheduled_for', true );
 			$output .= '<li><strong>' . esc_html( $appointment->post_title ) . '</strong> - ' . esc_html( $date ) . ' ' . esc_html( $time ) . ' - ' . esc_html( $status );
 			if ( ! empty( $reminder_scheduled_for ) ) {
-				$output .= '<br><small>' . esc_html__( 'Recordatorio programado:', 'electrocam-crm' ) . ' ' . esc_html( $reminder_scheduled_for ) . ' UTC</small>';
+				$output .= '<br><small>' . esc_html__( 'Recordatorio programado:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ) . '</small>';
 			}
 			if ( 'completed' !== $status && 'cancelled' !== $status ) {
 				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-reschedule-form">';
@@ -2908,6 +2908,34 @@ class EC_Core {
 		update_post_meta( $appointment_id, 'ec_modality', $modality );
 		update_post_meta( $appointment_id, 'ec_status', 'scheduled' );
 		$this->schedule_appointment_reminder( $appointment_id, $control_date, $control_time );
+	}
+
+
+	/**
+	 * Formatea fecha de recordatorio para mostrar hora local y UTC.
+	 *
+	 * @param string $utc_datetime Fecha en UTC.
+	 * @return string
+	 */
+	private function format_reminder_display_time( $utc_datetime ) {
+		$utc_datetime = is_string( $utc_datetime ) ? trim( $utc_datetime ) : '';
+		if ( empty( $utc_datetime ) ) {
+			return __( 'No programado', 'electrocam-crm' );
+		}
+
+		$local_datetime = get_date_from_gmt( $utc_datetime, 'Y-m-d H:i:s' );
+		$timezone_label = wp_timezone_string();
+		if ( empty( $timezone_label ) ) {
+			$timezone_label = 'sitio';
+		}
+
+		return sprintf(
+			/* translators: 1: local datetime, 2: timezone label, 3: utc datetime */
+			__( '%1$s (%2$s) / %3$s UTC', 'electrocam-crm' ),
+			$local_datetime,
+			$timezone_label,
+			$utc_datetime
+		);
 	}
 
 	/**

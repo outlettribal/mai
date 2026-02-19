@@ -83,6 +83,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 61. Procesamiento por lotes (paginado) al reprogramar/limpiar recordatorios en activación o desactivación, evitando tope fijo de 500 citas.
 62. El interruptor de recordatorios solo ejecuta mantenimiento (limpieza/reprogramación) cuando realmente cambia de estado, evitando trabajo redundante.
 63. Visibilidad del próximo recordatorio (`ec_reminder_scheduled_for`) en metabox de citas y listados frontend de cliente/operario.
+64. Visualización de recordatorio con hora local del sitio y UTC para evitar ambigüedad de zona horaria.
 
 ## Estructura
 
