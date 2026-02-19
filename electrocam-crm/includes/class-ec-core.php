@@ -2949,7 +2949,8 @@ class EC_Core {
 		$reminder_timestamp = strtotime( $utc_datetime . ' UTC' );
 		if ( $reminder_timestamp ) {
 			$diff_seconds = abs( $reminder_timestamp - $now );
-			if ( $diff_seconds <= MINUTE_IN_SECONDS ) {
+			$now_window_seconds = (int) apply_filters( 'ec_reminder_now_window_seconds', MINUTE_IN_SECONDS );
+			if ( $diff_seconds <= max( 1, $now_window_seconds ) ) {
 				$formatted .= ' — ' . __( 'ahora', 'electrocam-crm' );
 			} elseif ( $reminder_timestamp > $now ) {
 				$remaining = human_time_diff( $now, $reminder_timestamp );
