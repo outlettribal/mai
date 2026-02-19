@@ -76,6 +76,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 54. Preset adicional `next_90_days` en `eca_range` para planificación trimestral de citas en cliente/operario.
 55. Recordatorios automáticos de citas con WP-Cron (24h antes), reprogramables al cambiar fecha/hora y con auditoría de correo.
 56. Al activar el plugin se reprograman recordatorios para citas futuras ya existentes, evitando huecos en instalaciones/actualizaciones.
+57. Configuración de horas de anticipación del recordatorio (1-168h) desde ajustes, aplicada a WP-Cron y reprogramación en activación.
 
 ## Estructura
 
@@ -113,4 +114,4 @@ electrocam-crm/
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **100%**
 - Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **99%**
 - PDF y correo automático: **10%**
-- Conversación/comentarios y notificaciones: **84%**
+- Conversación/comentarios y notificaciones: **86%**

@@ -49,6 +49,9 @@ class EC_Core {
 		if ( false === get_option( 'ec_audit_retention_limit', false ) ) {
 			update_option( 'ec_audit_retention_limit', 50 );
 		}
+		if ( false === get_option( 'ec_reminder_lead_hours', false ) ) {
+			update_option( 'ec_reminder_lead_hours', 24 );
+		}
 		self::schedule_existing_appointment_reminders();
 		flush_rewrite_rules();
 	}
@@ -91,7 +94,14 @@ class EC_Core {
 				continue;
 			}
 
-			$reminder_timestamp = $appointment_timestamp - DAY_IN_SECONDS;
+			$lead_hours = (int) get_option( 'ec_reminder_lead_hours', 24 );
+			if ( $lead_hours < 1 ) {
+				$lead_hours = 1;
+			}
+			if ( $lead_hours > 168 ) {
+				$lead_hours = 168;
+			}
+			$reminder_timestamp = $appointment_timestamp - ( $lead_hours * HOUR_IN_SECONDS );
 			if ( $reminder_timestamp <= time() ) {
 				continue;
 			}
@@ -1087,6 +1097,16 @@ class EC_Core {
 				'default'           => 50,
 			)
 		);
+
+		register_setting(
+			'ec_settings_group',
+			'ec_reminder_lead_hours',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => array( $this, 'sanitize_reminder_lead_hours' ),
+				'default'           => 24,
+			)
+		);
 	}
 
 	/**
@@ -1116,6 +1136,14 @@ class EC_Core {
 						<td>
 							<input type="email" id="ec_notification_cc_email" name="ec_notification_cc_email" value="<?php echo esc_attr( get_option( 'ec_notification_cc_email', '' ) ); ?>" class="regular-text">
 							<p class="description"><?php esc_html_e( 'Opcional. Recibe copia de notificaciones de reprogramación y comentarios.', 'electrocam-crm' ); ?></p>
+						</td>
+					</tr>
+
+					<tr>
+						<th scope="row"><label for="ec_reminder_lead_hours"><?php esc_html_e( 'Horas de anticipación del recordatorio', 'electrocam-crm' ); ?></label></th>
+						<td>
+							<input type="number" id="ec_reminder_lead_hours" name="ec_reminder_lead_hours" value="<?php echo esc_attr( (int) get_option( 'ec_reminder_lead_hours', 24 ) ); ?>" min="1" max="168" step="1" class="small-text">
+							<p class="description"><?php esc_html_e( 'Cantidad de horas previas a la cita para enviar recordatorio automático (1 a 168).', 'electrocam-crm' ); ?></p>
 						</td>
 					</tr>
 					<tr>
@@ -1201,6 +1229,24 @@ class EC_Core {
 		}
 
 		return $limit;
+	}
+
+	/**
+	 * Sanitiza horas de anticipación para recordatorio.
+	 *
+	 * @param mixed $value Valor recibido.
+	 * @return int
+	 */
+	public function sanitize_reminder_lead_hours( $value ) {
+		$hours = absint( $value );
+		if ( $hours < 1 ) {
+			$hours = 1;
+		}
+		if ( $hours > 168 ) {
+			$hours = 168;
+		}
+
+		return $hours;
 	}
 
 	/**
@@ -2783,7 +2829,15 @@ class EC_Core {
 			return;
 		}
 
-		$reminder_timestamp = $appointment_timestamp - DAY_IN_SECONDS;
+		$lead_hours = (int) get_option( 'ec_reminder_lead_hours', 24 );
+		if ( $lead_hours < 1 ) {
+			$lead_hours = 1;
+		}
+		if ( $lead_hours > 168 ) {
+			$lead_hours = 168;
+		}
+
+		$reminder_timestamp = $appointment_timestamp - ( $lead_hours * HOUR_IN_SECONDS );
 		if ( $reminder_timestamp <= time() ) {
 			return;
 		}
