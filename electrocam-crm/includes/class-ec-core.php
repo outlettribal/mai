@@ -2948,11 +2948,14 @@ class EC_Core {
 		$now = time();
 		$reminder_timestamp = strtotime( $utc_datetime . ' UTC' );
 		if ( $reminder_timestamp ) {
-			if ( $reminder_timestamp > $now ) {
+			$diff_seconds = abs( $reminder_timestamp - $now );
+			if ( $diff_seconds < MINUTE_IN_SECONDS ) {
+				$formatted .= ' — ' . __( 'ahora', 'electrocam-crm' );
+			} elseif ( $reminder_timestamp > $now ) {
 				$remaining = human_time_diff( $now, $reminder_timestamp );
 				/* translators: %s: human readable remaining time. */
 				$formatted .= ' — ' . sprintf( __( 'en %s', 'electrocam-crm' ), $remaining );
-			} elseif ( $reminder_timestamp < $now ) {
+			} else {
 				$elapsed = human_time_diff( $reminder_timestamp, $now );
 				/* translators: %s: human readable elapsed time. */
 				$formatted .= ' — ' . sprintf( __( 'hace %s', 'electrocam-crm' ), $elapsed );

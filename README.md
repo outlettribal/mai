@@ -87,6 +87,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 65. Estado de recordatorio más explícito: muestra “Deshabilitado por configuración” cuando `ec_enable_reminders` está en `no` y valida formato de fecha antes de mostrarla.
 66. La visualización de recordatorio ahora incluye tiempo restante (ej. “en 5 horas”) cuando el envío aún está en el futuro.
 67. Si la hora del recordatorio ya pasó, la UI muestra tiempo transcurrido (ej. “hace 2 horas”) para dar contexto operativo.
+68. Si el recordatorio cae en la ventana de ±1 minuto respecto a “ahora”, la UI lo etiqueta como “ahora” para evitar mensajes ambiguos.
 
 ## Estructura
 
@@ -124,4 +125,4 @@ electrocam-crm/
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **100%**
 - Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **100%**
 - PDF y correo automático: **10%**
-- Conversación/comentarios y notificaciones: **94%**
+- Conversación/comentarios y notificaciones: **95%**
