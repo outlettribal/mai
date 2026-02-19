@@ -2945,11 +2945,11 @@ class EC_Core {
 			$utc_datetime
 		);
 
-		$now = time();
+		$now = (int) current_time( 'timestamp', true );
 		$reminder_timestamp = strtotime( $utc_datetime . ' UTC' );
 		if ( $reminder_timestamp ) {
 			$diff_seconds = abs( $reminder_timestamp - $now );
-			if ( $diff_seconds < MINUTE_IN_SECONDS ) {
+			if ( $diff_seconds <= MINUTE_IN_SECONDS ) {
 				$formatted .= ' — ' . __( 'ahora', 'electrocam-crm' );
 			} elseif ( $reminder_timestamp > $now ) {
 				$remaining = human_time_diff( $now, $reminder_timestamp );
