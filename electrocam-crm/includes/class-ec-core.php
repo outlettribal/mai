@@ -52,6 +52,9 @@ class EC_Core {
 		if ( false === get_option( 'ec_reminder_lead_hours', false ) ) {
 			update_option( 'ec_reminder_lead_hours', 24 );
 		}
+		if ( false === get_option( 'ec_enable_reminders', false ) ) {
+			update_option( 'ec_enable_reminders', 'yes' );
+		}
 		self::schedule_existing_appointment_reminders();
 		flush_rewrite_rules();
 	}
@@ -63,6 +66,10 @@ class EC_Core {
 	 * @return void
 	 */
 	private static function schedule_existing_appointment_reminders() {
+		if ( 'yes' !== get_option( 'ec_enable_reminders', 'yes' ) ) {
+			return;
+		}
+
 		$appointments = get_posts(
 			array(
 				'post_type'      => 'appointment',
@@ -1107,6 +1114,16 @@ class EC_Core {
 				'default'           => 24,
 			)
 		);
+
+		register_setting(
+			'ec_settings_group',
+			'ec_enable_reminders',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_enable_reminders' ),
+				'default'           => 'yes',
+			)
+		);
 	}
 
 	/**
@@ -1139,6 +1156,16 @@ class EC_Core {
 						</td>
 					</tr>
 
+
+					<tr>
+						<th scope="row"><?php esc_html_e( 'Recordatorios automáticos', 'electrocam-crm' ); ?></th>
+						<td>
+							<label for="ec_enable_reminders">
+								<input type="checkbox" id="ec_enable_reminders" name="ec_enable_reminders" value="yes" <?php checked( 'yes', get_option( 'ec_enable_reminders', 'yes' ) ); ?>>
+								<?php esc_html_e( 'Habilitar recordatorios por correo para citas programadas.', 'electrocam-crm' ); ?>
+							</label>
+						</td>
+					</tr>
 					<tr>
 						<th scope="row"><label for="ec_reminder_lead_hours"><?php esc_html_e( 'Horas de anticipación del recordatorio', 'electrocam-crm' ); ?></label></th>
 						<td>
@@ -1247,6 +1274,16 @@ class EC_Core {
 		}
 
 		return $hours;
+	}
+
+	/**
+	 * Sanitiza opción de habilitar recordatorios.
+	 *
+	 * @param mixed $value Valor recibido.
+	 * @return string
+	 */
+	public function sanitize_enable_reminders( $value ) {
+		return 'yes' === (string) $value ? 'yes' : 'no';
 	}
 
 	/**
@@ -2818,6 +2855,11 @@ class EC_Core {
 	 */
 	private function schedule_appointment_reminder( $appointment_id, $date, $time ) {
 		$appointment_id = absint( $appointment_id );
+		if ( 'yes' !== get_option( 'ec_enable_reminders', 'yes' ) ) {
+			$this->clear_appointment_reminder( $appointment_id );
+			return;
+		}
+
 		if ( ! $appointment_id || ! $this->is_valid_date_time( $date, $time ) ) {
 			return;
 		}
@@ -2869,6 +2911,10 @@ class EC_Core {
 	 * @return void
 	 */
 	public function send_appointment_reminder( $appointment_id ) {
+		if ( 'yes' !== get_option( 'ec_enable_reminders', 'yes' ) ) {
+			return;
+		}
+
 		$appointment_id = absint( $appointment_id );
 		if ( ! $appointment_id ) {
 			return;
