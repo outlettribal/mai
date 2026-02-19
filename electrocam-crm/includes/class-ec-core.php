@@ -2301,6 +2301,10 @@ class EC_Core {
 			wp_die( esc_html__( 'Solicitud inválida.', 'electrocam-crm' ) );
 		}
 
+		if ( 'quotation' !== get_post_type( $quotation_id ) ) {
+			wp_die( esc_html__( 'Cotización inválida.', 'electrocam-crm' ) );
+		}
+
 		$current_user_id = get_current_user_id();
 		$client_id = (int) get_post_meta( $quotation_id, 'ec_client_id', true );
 		$current_status = (string) get_post_meta( $quotation_id, 'ec_quotation_status', true );
@@ -2468,6 +2472,10 @@ class EC_Core {
 			wp_die( esc_html__( 'Solicitud inválida.', 'electrocam-crm' ) );
 		}
 
+		if ( 'appointment' !== get_post_type( $appointment_id ) ) {
+			wp_die( esc_html__( 'Cita inválida.', 'electrocam-crm' ) );
+		}
+
 		$service_order_id = (int) get_post_meta( $appointment_id, 'ec_service_order_id', true );
 		$current_user_id = get_current_user_id();
 		$operator_id = $service_order_id ? (int) get_post_meta( $service_order_id, 'ec_operator_id', true ) : 0;
@@ -2497,6 +2505,10 @@ class EC_Core {
 
 		if ( ! $appointment_id || ! wp_verify_nonce( $nonce, 'ec_client_reschedule_' . $appointment_id ) ) {
 			wp_die( esc_html__( 'Solicitud inválida.', 'electrocam-crm' ) );
+		}
+
+		if ( 'appointment' !== get_post_type( $appointment_id ) ) {
+			wp_die( esc_html__( 'Cita inválida.', 'electrocam-crm' ) );
 		}
 
 		$current_user_id = get_current_user_id();
