@@ -2937,13 +2937,22 @@ class EC_Core {
 			$timezone_label = 'sitio';
 		}
 
-		return sprintf(
+		$formatted = sprintf(
 			/* translators: 1: local datetime, 2: timezone label, 3: utc datetime */
 			__( '%1$s (%2$s) / %3$s UTC', 'electrocam-crm' ),
 			$local_datetime,
 			$timezone_label,
 			$utc_datetime
 		);
+
+		$reminder_timestamp = strtotime( $utc_datetime . ' UTC' );
+		if ( $reminder_timestamp && $reminder_timestamp > time() ) {
+			$remaining = human_time_diff( time(), $reminder_timestamp );
+			/* translators: %s: human readable remaining time. */
+			$formatted .= ' — ' . sprintf( __( 'en %s', 'electrocam-crm' ), $remaining );
+		}
+
+		return $formatted;
 	}
 
 	/**

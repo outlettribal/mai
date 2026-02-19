@@ -85,6 +85,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 63. Visibilidad del próximo recordatorio (`ec_reminder_scheduled_for`) en metabox de citas y listados frontend de cliente/operario.
 64. Visualización de recordatorio con hora local del sitio y UTC para evitar ambigüedad de zona horaria.
 65. Estado de recordatorio más explícito: muestra “Deshabilitado por configuración” cuando `ec_enable_reminders` está en `no` y valida formato de fecha antes de mostrarla.
+66. La visualización de recordatorio ahora incluye tiempo restante (ej. “en 5 horas”) cuando el envío aún está en el futuro.
 
 ## Estructura
 
@@ -122,4 +123,4 @@ electrocam-crm/
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **100%**
 - Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **100%**
 - PDF y correo automático: **10%**
-- Conversación/comentarios y notificaciones: **92%**
+- Conversación/comentarios y notificaciones: **93%**
