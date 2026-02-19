@@ -70,55 +70,62 @@ class EC_Core {
 			return;
 		}
 
-		$appointments = get_posts(
-			array(
-				'post_type'      => 'appointment',
-				'post_status'    => array( 'publish', 'private' ),
-				'posts_per_page' => 500,
-				'fields'         => 'ids',
-				'meta_query'     => array(
-					array(
-						'key'   => 'ec_status',
-						'value' => 'scheduled',
+		$page = 1;
+		$per_page = 200;
+
+		do {
+			$appointments = get_posts(
+				array(
+					'post_type'      => 'appointment',
+					'post_status'    => array( 'publish', 'private' ),
+					'posts_per_page' => $per_page,
+					'paged'          => $page,
+					'fields'         => 'ids',
+					'meta_query'     => array(
+						array(
+							'key'   => 'ec_status',
+							'value' => 'scheduled',
+						),
 					),
-				),
-			)
-		);
+				)
+			);
 
-		if ( empty( $appointments ) ) {
-			return;
-		}
-
-		foreach ( $appointments as $appointment_id ) {
-			$date = (string) get_post_meta( $appointment_id, 'ec_appointment_date', true );
-			$time = (string) get_post_meta( $appointment_id, 'ec_appointment_time', true );
-			if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) || ! preg_match( '/^\d{2}:\d{2}$/', $time ) ) {
-				continue;
+			if ( empty( $appointments ) ) {
+				break;
 			}
 
-			$appointment_timestamp = strtotime( $date . ' ' . $time );
-			if ( ! $appointment_timestamp ) {
-				continue;
+			foreach ( $appointments as $appointment_id ) {
+				$date = (string) get_post_meta( $appointment_id, 'ec_appointment_date', true );
+				$time = (string) get_post_meta( $appointment_id, 'ec_appointment_time', true );
+				if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date ) || ! preg_match( '/^\d{2}:\d{2}$/', $time ) ) {
+					continue;
+				}
+
+				$appointment_timestamp = strtotime( $date . ' ' . $time );
+				if ( ! $appointment_timestamp ) {
+					continue;
+				}
+
+				$lead_hours = (int) get_option( 'ec_reminder_lead_hours', 24 );
+				if ( $lead_hours < 1 ) {
+					$lead_hours = 1;
+				}
+				if ( $lead_hours > 168 ) {
+					$lead_hours = 168;
+				}
+				$reminder_timestamp = $appointment_timestamp - ( $lead_hours * HOUR_IN_SECONDS );
+				if ( $reminder_timestamp <= time() ) {
+					continue;
+				}
+
+				wp_clear_scheduled_hook( 'ec_send_appointment_reminder', array( (int) $appointment_id ) );
+				wp_schedule_single_event( $reminder_timestamp, 'ec_send_appointment_reminder', array( (int) $appointment_id ) );
+				update_post_meta( (int) $appointment_id, 'ec_reminder_scheduled_for', gmdate( 'Y-m-d H:i:s', $reminder_timestamp ) );
 			}
 
-			$lead_hours = (int) get_option( 'ec_reminder_lead_hours', 24 );
-			if ( $lead_hours < 1 ) {
-				$lead_hours = 1;
-			}
-			if ( $lead_hours > 168 ) {
-				$lead_hours = 168;
-			}
-			$reminder_timestamp = $appointment_timestamp - ( $lead_hours * HOUR_IN_SECONDS );
-			if ( $reminder_timestamp <= time() ) {
-				continue;
-			}
-
-			wp_clear_scheduled_hook( 'ec_send_appointment_reminder', array( (int) $appointment_id ) );
-			wp_schedule_single_event( $reminder_timestamp, 'ec_send_appointment_reminder', array( (int) $appointment_id ) );
-			update_post_meta( (int) $appointment_id, 'ec_reminder_scheduled_for', gmdate( 'Y-m-d H:i:s', $reminder_timestamp ) );
-		}
+			++$page;
+		} while ( count( $appointments ) === $per_page );
 	}
-
 
 	/**
 	 * Elimina metadatos de programación de recordatorios para todas las citas.
@@ -126,22 +133,30 @@ class EC_Core {
 	 * @return void
 	 */
 	private static function clear_all_appointment_reminder_metadata() {
-		$appointments = get_posts(
-			array(
-				'post_type'      => 'appointment',
-				'post_status'    => 'any',
-				'posts_per_page' => 500,
-				'fields'         => 'ids',
-			)
-		);
+		$page = 1;
+		$per_page = 200;
 
-		if ( empty( $appointments ) ) {
-			return;
-		}
+		do {
+			$appointments = get_posts(
+				array(
+					'post_type'      => 'appointment',
+					'post_status'    => 'any',
+					'posts_per_page' => $per_page,
+					'paged'          => $page,
+					'fields'         => 'ids',
+				)
+			);
 
-		foreach ( $appointments as $appointment_id ) {
-			delete_post_meta( (int) $appointment_id, 'ec_reminder_scheduled_for' );
-		}
+			if ( empty( $appointments ) ) {
+				break;
+			}
+
+			foreach ( $appointments as $appointment_id ) {
+				delete_post_meta( (int) $appointment_id, 'ec_reminder_scheduled_for' );
+			}
+
+			++$page;
+		} while ( count( $appointments ) === $per_page );
 	}
 
 	/**

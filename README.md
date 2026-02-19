@@ -80,6 +80,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 58. Interruptor global para habilitar/deshabilitar recordatorios automáticos desde ajustes (`ec_enable_reminders`).
 59. Al cambiar el interruptor de recordatorios se aplican efectos inmediatos: al desactivar se limpia WP-Cron y al activar se reprograman citas futuras.
 60. Al desactivar recordatorios (o desactivar el plugin) también se limpia el meta `ec_reminder_scheduled_for` para evitar trazas obsoletas.
+61. Procesamiento por lotes (paginado) al reprogramar/limpiar recordatorios en activación o desactivación, evitando tope fijo de 500 citas.
 
 ## Estructura
 
@@ -110,7 +111,7 @@ electrocam-crm/
 
 ## Avance estimado del proyecto
 
-- Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **97%**
+- Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **98%**
 - Módulo de órdenes de servicio (metabox + trazabilidad + filtros frontend): **75%**
 - Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **99%**
 - Módulo de inventario (metabox + persistencia): **40%**
