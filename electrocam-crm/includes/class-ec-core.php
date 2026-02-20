@@ -801,8 +801,7 @@ class EC_Core {
 		</p>
 		<?php $reminder_scheduled_for = (string) get_post_meta( $post->ID, 'ec_reminder_scheduled_for', true ); ?>
 		<p><strong><?php esc_html_e( 'Próximo recordatorio programado', 'electrocam-crm' ); ?>:</strong> <?php echo esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ); ?></p>
-		<?php $last_reminder_failed_at = (string) get_post_meta( $post->ID, 'ec_last_reminder_email_failed_at', true ); ?>
-		<p><strong><?php esc_html_e( 'Último fallo de recordatorio', 'electrocam-crm' ); ?>:</strong> <?php echo esc_html( ! empty( $last_reminder_failed_at ) ? $this->format_utc_datetime_for_display( $last_reminder_failed_at ) : __( 'Sin fallos registrados', 'electrocam-crm' ) ); ?></p>
+		<p><strong><?php esc_html_e( 'Último fallo de recordatorio', 'electrocam-crm' ); ?>:</strong><?php echo wp_kses_post( $this->render_last_reminder_failure_html( $post->ID ) ); ?></p>
 		<hr>
 		<p><strong><?php esc_html_e( 'Historial de reprogramaciones', 'electrocam-crm' ); ?></strong></p>
 		<?php if ( ! empty( $reschedule_history ) && is_array( $reschedule_history ) ) : ?>
@@ -1782,7 +1781,7 @@ class EC_Core {
 			if ( ! empty( $reminder_scheduled_for ) ) {
 				$output .= '<br><small>' . esc_html__( 'Recordatorio programado:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ) . '</small>';
 			}
-			$output .= $this->render_last_reminder_failure_html( $appointment->ID );
+			$output .= '<br>' . $this->render_last_reminder_failure_html( $appointment->ID );
 			if ( 'completed' !== $status && 'cancelled' !== $status ) {
 				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-reschedule-form">';
 				$output .= '<input type="hidden" name="action" value="ec_client_reschedule_appointment">';
@@ -2238,7 +2237,7 @@ class EC_Core {
 			if ( ! empty( $reminder_scheduled_for ) ) {
 				$output .= '<br><small>' . esc_html__( 'Recordatorio programado:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ) . '</small>';
 			}
-			$output .= $this->render_last_reminder_failure_html( $appointment->ID );
+			$output .= '<br>' . $this->render_last_reminder_failure_html( $appointment->ID );
 			if ( 'completed' !== $status && 'cancelled' !== $status ) {
 				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-reschedule-form">';
 				$output .= '<input type="hidden" name="action" value="ec_operator_reschedule_appointment">';
@@ -2933,6 +2932,25 @@ class EC_Core {
 
 
 
+
+	/**
+	 * Obtiene texto de último fallo de recordatorio para una cita.
+	 *
+	 * @param int $appointment_id ID de cita.
+	 * @return string
+	 */
+	private function get_last_reminder_failure_display_text( $appointment_id ) {
+		$appointment_id = absint( $appointment_id );
+		$last_reminder_failed_at = (string) get_post_meta( $appointment_id, 'ec_last_reminder_email_failed_at', true );
+
+		if ( ! empty( $last_reminder_failed_at ) ) {
+			return $this->format_utc_datetime_for_display( $last_reminder_failed_at );
+		}
+
+		return __( 'Sin fallos registrados', 'electrocam-crm' );
+	}
+
+
 	/**
 	 * Renderiza resumen del último fallo de recordatorio para una cita.
 	 *
@@ -2940,16 +2958,9 @@ class EC_Core {
 	 * @return string
 	 */
 	private function render_last_reminder_failure_html( $appointment_id ) {
-		$appointment_id = absint( $appointment_id );
-		$last_reminder_failed_at = (string) get_post_meta( $appointment_id, 'ec_last_reminder_email_failed_at', true );
+		$display = $this->get_last_reminder_failure_display_text( $appointment_id );
 
-		if ( ! empty( $last_reminder_failed_at ) ) {
-			$display = $this->format_utc_datetime_for_display( $last_reminder_failed_at );
-		} else {
-			$display = __( 'Sin fallos registrados', 'electrocam-crm' );
-		}
-
-		return '<br><small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html( $display ) . '</small>';
+		return '<small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html( $display ) . '</small>';
 	}
 
 
