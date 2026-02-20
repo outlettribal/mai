@@ -3050,12 +3050,18 @@ class EC_Core {
 	 * @return void
 	 */
 	public function send_appointment_reminder( $appointment_id ) {
-		if ( 'yes' !== get_option( 'ec_enable_reminders', 'yes' ) ) {
+		$appointment_id = absint( $appointment_id );
+		if ( ! $appointment_id ) {
 			return;
 		}
 
-		$appointment_id = absint( $appointment_id );
-		if ( ! $appointment_id || 'appointment' !== get_post_type( $appointment_id ) ) {
+		if ( 'yes' !== get_option( 'ec_enable_reminders', 'yes' ) ) {
+			$this->clear_appointment_reminder( $appointment_id );
+			return;
+		}
+
+		if ( 'appointment' !== get_post_type( $appointment_id ) ) {
+			$this->clear_appointment_reminder( $appointment_id );
 			return;
 		}
 

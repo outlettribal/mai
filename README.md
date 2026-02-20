@@ -96,6 +96,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 74. Auto-limpieza en ejecución de cron: si la cita ya no está `scheduled` o su fecha/hora es inválida, se elimina el recordatorio pendiente y su meta programada.
 75. Al enviarse exitosamente un recordatorio por cron, se limpia `ec_reminder_scheduled_for` para evitar mostrar programación vencida en vistas admin/frontend.
 76. En la reprogramación masiva de activación, si el recordatorio ya quedó en pasado se limpia cron/meta residual (`ec_reminder_scheduled_for`) para evitar trazas obsoletas.
+77. El handler cron también limpia programación/meta cuando los recordatorios están deshabilitados o el ID recibido no corresponde a una cita válida.
 
 ## Estructura
 
