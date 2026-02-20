@@ -2960,7 +2960,7 @@ class EC_Core {
 	private function render_last_reminder_failure_html( $appointment_id ) {
 		$display = $this->get_last_reminder_failure_display_text( $appointment_id );
 
-		return '<small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html( $display ) . '</small>';
+		return '<small class="ec-reminder-failure-status">' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html( $display ) . '</small>';
 	}
 
 

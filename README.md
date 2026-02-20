@@ -106,6 +106,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 84. Refactor UI: el texto de “Último fallo de recordatorio” en frontend se centraliza en helper (`render_last_reminder_failure_html`) para evitar duplicación y mantener consistencia.
 85. El metabox admin también reutiliza helper compartido de “Último fallo de recordatorio” para asegurar consistencia total con frontend.
 86. Ajuste de metabox: se evita duplicar la etiqueta “Último fallo de recordatorio” mostrando solo el valor final formateado.
+87. Se añadió clase CSS `ec-reminder-failure-status` al bloque frontend de “Último fallo de recordatorio” para facilitar estilado sin alterar markup funcional.
 
 ## Estructura
 
