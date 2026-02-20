@@ -801,6 +801,8 @@ class EC_Core {
 		</p>
 		<?php $reminder_scheduled_for = (string) get_post_meta( $post->ID, 'ec_reminder_scheduled_for', true ); ?>
 		<p><strong><?php esc_html_e( 'Próximo recordatorio programado', 'electrocam-crm' ); ?>:</strong> <?php echo esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ); ?></p>
+		<?php $last_reminder_failed_at = (string) get_post_meta( $post->ID, 'ec_last_reminder_email_failed_at', true ); ?>
+		<p><strong><?php esc_html_e( 'Último fallo de recordatorio', 'electrocam-crm' ); ?>:</strong> <?php echo esc_html( $this->format_utc_datetime_for_display( $last_reminder_failed_at ) ); ?></p>
 		<hr>
 		<p><strong><?php esc_html_e( 'Historial de reprogramaciones', 'electrocam-crm' ); ?></strong></p>
 		<?php if ( ! empty( $reschedule_history ) && is_array( $reschedule_history ) ) : ?>
@@ -1780,6 +1782,10 @@ class EC_Core {
 			if ( ! empty( $reminder_scheduled_for ) ) {
 				$output .= '<br><small>' . esc_html__( 'Recordatorio programado:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ) . '</small>';
 			}
+			$last_reminder_failed_at = (string) get_post_meta( $appointment->ID, 'ec_last_reminder_email_failed_at', true );
+			if ( ! empty( $last_reminder_failed_at ) ) {
+				$output .= '<br><small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_utc_datetime_for_display( $last_reminder_failed_at ) ) . '</small>';
+			}
 			if ( 'completed' !== $status && 'cancelled' !== $status ) {
 				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-reschedule-form">';
 				$output .= '<input type="hidden" name="action" value="ec_client_reschedule_appointment">';
@@ -2234,6 +2240,10 @@ class EC_Core {
 			$output .= '<li><strong>' . esc_html( $appointment->post_title ) . '</strong> - ' . esc_html( $date ) . ' ' . esc_html( $time ) . ' - ' . esc_html( $status );
 			if ( ! empty( $reminder_scheduled_for ) ) {
 				$output .= '<br><small>' . esc_html__( 'Recordatorio programado:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ) . '</small>';
+			}
+			$last_reminder_failed_at = (string) get_post_meta( $appointment->ID, 'ec_last_reminder_email_failed_at', true );
+			if ( ! empty( $last_reminder_failed_at ) ) {
+				$output .= '<br><small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_utc_datetime_for_display( $last_reminder_failed_at ) ) . '</small>';
 			}
 			if ( 'completed' !== $status && 'cancelled' !== $status ) {
 				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-reschedule-form">';
@@ -2925,6 +2935,38 @@ class EC_Core {
 		update_post_meta( $appointment_id, 'ec_modality', $modality );
 		update_post_meta( $appointment_id, 'ec_status', 'scheduled' );
 		$this->schedule_appointment_reminder( $appointment_id, $control_date, $control_time );
+	}
+
+
+	/**
+	 * Formatea fecha UTC para visualización local + UTC.
+	 *
+	 * @param string $utc_datetime Fecha en UTC.
+	 * @return string
+	 */
+	private function format_utc_datetime_for_display( $utc_datetime ) {
+		$utc_datetime = is_string( $utc_datetime ) ? trim( $utc_datetime ) : '';
+		if ( empty( $utc_datetime ) || ! preg_match( '/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$/', $utc_datetime ) ) {
+			return __( 'No registrado', 'electrocam-crm' );
+		}
+
+		$local_datetime = get_date_from_gmt( $utc_datetime, 'Y-m-d H:i:s' );
+		if ( empty( $local_datetime ) ) {
+			return __( 'No registrado', 'electrocam-crm' );
+		}
+
+		$timezone_label = wp_timezone_string();
+		if ( empty( $timezone_label ) ) {
+			$timezone_label = 'sitio';
+		}
+
+		return sprintf(
+			/* translators: 1: local datetime, 2: timezone label, 3: utc datetime */
+			__( '%1$s (%2$s) / %3$s UTC', 'electrocam-crm' ),
+			$local_datetime,
+			$timezone_label,
+			$utc_datetime
+		);
 	}
 
 

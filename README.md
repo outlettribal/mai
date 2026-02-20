@@ -100,6 +100,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 78. Si el cron no tiene destinatarios válidos o falla `wp_mail()`, también limpia `ec_reminder_scheduled_for` para evitar estados engañosos de “programado”.
 79. La limpieza post-cron usa `clear_appointment_reminder()` (hook + meta) tanto en éxito como en fallo de envío para evitar residuos de eventos duplicados.
 80. El cron de recordatorios ahora audita fallos (`appointment_reminder_failed`/sin destinatarios) y guarda `ec_last_reminder_email_failed_at` para trazabilidad operativa.
+81. Se expone la marca `ec_last_reminder_email_failed_at` en metabox y listados frontend de citas (hora local + UTC) para diagnóstico rápido de fallos.
 
 ## Estructura
 
