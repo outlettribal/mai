@@ -2430,7 +2430,6 @@ class EC_Core {
 
 		$recipients = array_unique( array_filter( $recipients ) );
 		if ( empty( $recipients ) ) {
-			$this->clear_appointment_reminder( $appointment_id );
 			return;
 		}
 
@@ -2821,7 +2820,6 @@ class EC_Core {
 
 		$recipients = array_unique( array_filter( $recipients ) );
 		if ( empty( $recipients ) ) {
-			$this->clear_appointment_reminder( $appointment_id );
 			return;
 		}
 
@@ -3102,6 +3100,9 @@ class EC_Core {
 
 		$recipients = array_unique( array_filter( $recipients ) );
 		if ( empty( $recipients ) ) {
+			$failed_at = gmdate( 'Y-m-d H:i:s' );
+			update_post_meta( $appointment_id, 'ec_last_reminder_email_failed_at', $failed_at );
+			$this->append_email_audit( $appointment_id, 'appointment_reminder_skipped_no_recipients', array(), __( '[Electrocam] Recordatorio no enviado: sin destinatarios válidos', 'electrocam-crm' ), $failed_at );
 			$this->clear_appointment_reminder( $appointment_id );
 			return;
 		}
@@ -3124,9 +3125,13 @@ class EC_Core {
 		if ( $sent ) {
 			$sent_at = gmdate( 'Y-m-d H:i:s' );
 			update_post_meta( $appointment_id, 'ec_last_reminder_email_sent_at', $sent_at );
+			delete_post_meta( $appointment_id, 'ec_last_reminder_email_failed_at' );
 			$this->clear_appointment_reminder( $appointment_id );
 			$this->append_email_audit( $appointment_id, 'appointment_reminder', $recipients, $subject, $sent_at );
 		} else {
+			$failed_at = gmdate( 'Y-m-d H:i:s' );
+			update_post_meta( $appointment_id, 'ec_last_reminder_email_failed_at', $failed_at );
+			$this->append_email_audit( $appointment_id, 'appointment_reminder_failed', $recipients, $subject, $failed_at );
 			$this->clear_appointment_reminder( $appointment_id );
 		}
 	}
