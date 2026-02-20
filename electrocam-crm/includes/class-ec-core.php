@@ -1785,6 +1785,8 @@ class EC_Core {
 			$last_reminder_failed_at = (string) get_post_meta( $appointment->ID, 'ec_last_reminder_email_failed_at', true );
 			if ( ! empty( $last_reminder_failed_at ) ) {
 				$output .= '<br><small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_utc_datetime_for_display( $last_reminder_failed_at ) ) . '</small>';
+			} else {
+				$output .= '<br><small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html__( 'Sin fallos registrados', 'electrocam-crm' ) . '</small>';
 			}
 			if ( 'completed' !== $status && 'cancelled' !== $status ) {
 				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-reschedule-form">';
@@ -2244,6 +2246,8 @@ class EC_Core {
 			$last_reminder_failed_at = (string) get_post_meta( $appointment->ID, 'ec_last_reminder_email_failed_at', true );
 			if ( ! empty( $last_reminder_failed_at ) ) {
 				$output .= '<br><small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_utc_datetime_for_display( $last_reminder_failed_at ) ) . '</small>';
+			} else {
+				$output .= '<br><small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html__( 'Sin fallos registrados', 'electrocam-crm' ) . '</small>';
 			}
 			if ( 'completed' !== $status && 'cancelled' !== $status ) {
 				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-reschedule-form">';
