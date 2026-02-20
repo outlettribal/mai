@@ -3124,10 +3124,10 @@ class EC_Core {
 		if ( $sent ) {
 			$sent_at = gmdate( 'Y-m-d H:i:s' );
 			update_post_meta( $appointment_id, 'ec_last_reminder_email_sent_at', $sent_at );
-			delete_post_meta( $appointment_id, 'ec_reminder_scheduled_for' );
+			$this->clear_appointment_reminder( $appointment_id );
 			$this->append_email_audit( $appointment_id, 'appointment_reminder', $recipients, $subject, $sent_at );
 		} else {
-			delete_post_meta( $appointment_id, 'ec_reminder_scheduled_for' );
+			$this->clear_appointment_reminder( $appointment_id );
 		}
 	}
 }
