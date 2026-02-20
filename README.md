@@ -101,6 +101,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 79. La limpieza post-cron usa `clear_appointment_reminder()` (hook + meta) tanto en éxito como en fallo de envío para evitar residuos de eventos duplicados.
 80. El cron de recordatorios ahora audita fallos (`appointment_reminder_failed`/sin destinatarios) y guarda `ec_last_reminder_email_failed_at` para trazabilidad operativa.
 81. Se expone la marca `ec_last_reminder_email_failed_at` en metabox y listados frontend de citas (hora local + UTC) para diagnóstico rápido de fallos.
+82. El metabox de citas muestra “Sin fallos registrados” cuando no existe `ec_last_reminder_email_failed_at`, evitando ruido de “No registrado”.
 
 ## Estructura
 

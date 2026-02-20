@@ -802,7 +802,7 @@ class EC_Core {
 		<?php $reminder_scheduled_for = (string) get_post_meta( $post->ID, 'ec_reminder_scheduled_for', true ); ?>
 		<p><strong><?php esc_html_e( 'Próximo recordatorio programado', 'electrocam-crm' ); ?>:</strong> <?php echo esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ); ?></p>
 		<?php $last_reminder_failed_at = (string) get_post_meta( $post->ID, 'ec_last_reminder_email_failed_at', true ); ?>
-		<p><strong><?php esc_html_e( 'Último fallo de recordatorio', 'electrocam-crm' ); ?>:</strong> <?php echo esc_html( $this->format_utc_datetime_for_display( $last_reminder_failed_at ) ); ?></p>
+		<p><strong><?php esc_html_e( 'Último fallo de recordatorio', 'electrocam-crm' ); ?>:</strong> <?php echo esc_html( ! empty( $last_reminder_failed_at ) ? $this->format_utc_datetime_for_display( $last_reminder_failed_at ) : __( 'Sin fallos registrados', 'electrocam-crm' ) ); ?></p>
 		<hr>
 		<p><strong><?php esc_html_e( 'Historial de reprogramaciones', 'electrocam-crm' ); ?></strong></p>
 		<?php if ( ! empty( $reschedule_history ) && is_array( $reschedule_history ) ) : ?>
