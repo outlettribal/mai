@@ -801,7 +801,7 @@ class EC_Core {
 		</p>
 		<?php $reminder_scheduled_for = (string) get_post_meta( $post->ID, 'ec_reminder_scheduled_for', true ); ?>
 		<p><strong><?php esc_html_e( 'Próximo recordatorio programado', 'electrocam-crm' ); ?>:</strong> <?php echo esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ); ?></p>
-		<p><strong><?php esc_html_e( 'Último fallo de recordatorio', 'electrocam-crm' ); ?>:</strong><?php echo wp_kses_post( $this->render_last_reminder_failure_html( $post->ID ) ); ?></p>
+		<p><strong><?php esc_html_e( 'Último fallo de recordatorio', 'electrocam-crm' ); ?>:</strong> <?php echo esc_html( $this->get_last_reminder_failure_display_text( $post->ID ) ); ?></p>
 		<hr>
 		<p><strong><?php esc_html_e( 'Historial de reprogramaciones', 'electrocam-crm' ); ?></strong></p>
 		<?php if ( ! empty( $reschedule_history ) && is_array( $reschedule_history ) ) : ?>

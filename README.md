@@ -105,6 +105,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 83. Los listados frontend de citas (cliente/operario) también muestran “Sin fallos registrados” cuando no hay marca de fallo de recordatorio.
 84. Refactor UI: el texto de “Último fallo de recordatorio” en frontend se centraliza en helper (`render_last_reminder_failure_html`) para evitar duplicación y mantener consistencia.
 85. El metabox admin también reutiliza helper compartido de “Último fallo de recordatorio” para asegurar consistencia total con frontend.
+86. Ajuste de metabox: se evita duplicar la etiqueta “Último fallo de recordatorio” mostrando solo el valor final formateado.
 
 ## Estructura
 
