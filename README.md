@@ -103,6 +103,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 81. Se expone la marca `ec_last_reminder_email_failed_at` en metabox y listados frontend de citas (hora local + UTC) para diagnóstico rápido de fallos.
 82. El metabox de citas muestra “Sin fallos registrados” cuando no existe `ec_last_reminder_email_failed_at`, evitando ruido de “No registrado”.
 83. Los listados frontend de citas (cliente/operario) también muestran “Sin fallos registrados” cuando no hay marca de fallo de recordatorio.
+84. Refactor UI: el texto de “Último fallo de recordatorio” en frontend se centraliza en helper (`render_last_reminder_failure_html`) para evitar duplicación y mantener consistencia.
 
 ## Estructura
 

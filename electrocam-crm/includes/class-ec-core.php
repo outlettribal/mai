@@ -1782,12 +1782,7 @@ class EC_Core {
 			if ( ! empty( $reminder_scheduled_for ) ) {
 				$output .= '<br><small>' . esc_html__( 'Recordatorio programado:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ) . '</small>';
 			}
-			$last_reminder_failed_at = (string) get_post_meta( $appointment->ID, 'ec_last_reminder_email_failed_at', true );
-			if ( ! empty( $last_reminder_failed_at ) ) {
-				$output .= '<br><small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_utc_datetime_for_display( $last_reminder_failed_at ) ) . '</small>';
-			} else {
-				$output .= '<br><small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html__( 'Sin fallos registrados', 'electrocam-crm' ) . '</small>';
-			}
+			$output .= $this->render_last_reminder_failure_html( $appointment->ID );
 			if ( 'completed' !== $status && 'cancelled' !== $status ) {
 				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-reschedule-form">';
 				$output .= '<input type="hidden" name="action" value="ec_client_reschedule_appointment">';
@@ -2243,12 +2238,7 @@ class EC_Core {
 			if ( ! empty( $reminder_scheduled_for ) ) {
 				$output .= '<br><small>' . esc_html__( 'Recordatorio programado:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_reminder_display_time( $reminder_scheduled_for ) ) . '</small>';
 			}
-			$last_reminder_failed_at = (string) get_post_meta( $appointment->ID, 'ec_last_reminder_email_failed_at', true );
-			if ( ! empty( $last_reminder_failed_at ) ) {
-				$output .= '<br><small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html( $this->format_utc_datetime_for_display( $last_reminder_failed_at ) ) . '</small>';
-			} else {
-				$output .= '<br><small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html__( 'Sin fallos registrados', 'electrocam-crm' ) . '</small>';
-			}
+			$output .= $this->render_last_reminder_failure_html( $appointment->ID );
 			if ( 'completed' !== $status && 'cancelled' !== $status ) {
 				$output .= '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="ec-reschedule-form">';
 				$output .= '<input type="hidden" name="action" value="ec_operator_reschedule_appointment">';
@@ -2939,6 +2929,27 @@ class EC_Core {
 		update_post_meta( $appointment_id, 'ec_modality', $modality );
 		update_post_meta( $appointment_id, 'ec_status', 'scheduled' );
 		$this->schedule_appointment_reminder( $appointment_id, $control_date, $control_time );
+	}
+
+
+
+	/**
+	 * Renderiza resumen del último fallo de recordatorio para una cita.
+	 *
+	 * @param int $appointment_id ID de cita.
+	 * @return string
+	 */
+	private function render_last_reminder_failure_html( $appointment_id ) {
+		$appointment_id = absint( $appointment_id );
+		$last_reminder_failed_at = (string) get_post_meta( $appointment_id, 'ec_last_reminder_email_failed_at', true );
+
+		if ( ! empty( $last_reminder_failed_at ) ) {
+			$display = $this->format_utc_datetime_for_display( $last_reminder_failed_at );
+		} else {
+			$display = __( 'Sin fallos registrados', 'electrocam-crm' );
+		}
+
+		return '<br><small>' . esc_html__( 'Último fallo de recordatorio:', 'electrocam-crm' ) . ' ' . esc_html( $display ) . '</small>';
 	}
 
 
