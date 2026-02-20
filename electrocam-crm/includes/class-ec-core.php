@@ -2430,6 +2430,7 @@ class EC_Core {
 
 		$recipients = array_unique( array_filter( $recipients ) );
 		if ( empty( $recipients ) ) {
+			$this->clear_appointment_reminder( $appointment_id );
 			return;
 		}
 
@@ -2657,6 +2658,7 @@ class EC_Core {
 		$recipients = array_unique( array_filter( $recipients ) );
 
 		if ( empty( $recipients ) ) {
+			$this->clear_appointment_reminder( $appointment_id );
 			return;
 		}
 
@@ -2819,6 +2821,7 @@ class EC_Core {
 
 		$recipients = array_unique( array_filter( $recipients ) );
 		if ( empty( $recipients ) ) {
+			$this->clear_appointment_reminder( $appointment_id );
 			return;
 		}
 
@@ -3099,6 +3102,7 @@ class EC_Core {
 
 		$recipients = array_unique( array_filter( $recipients ) );
 		if ( empty( $recipients ) ) {
+			$this->clear_appointment_reminder( $appointment_id );
 			return;
 		}
 
@@ -3122,7 +3126,8 @@ class EC_Core {
 			update_post_meta( $appointment_id, 'ec_last_reminder_email_sent_at', $sent_at );
 			delete_post_meta( $appointment_id, 'ec_reminder_scheduled_for' );
 			$this->append_email_audit( $appointment_id, 'appointment_reminder', $recipients, $subject, $sent_at );
+		} else {
+			delete_post_meta( $appointment_id, 'ec_reminder_scheduled_for' );
 		}
 	}
 }
-
