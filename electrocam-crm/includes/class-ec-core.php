@@ -199,6 +199,7 @@ class EC_Core {
 		add_shortcode( 'ec_operator_orders', array( $this, 'render_operator_orders_shortcode' ) );
 		add_shortcode( 'ec_operator_appointments', array( $this, 'render_operator_appointments_shortcode' ) );
 		add_shortcode( 'ec_operator_quotations', array( $this, 'render_operator_quotations_shortcode' ) );
+		add_shortcode( 'ec_operator_inventory', array( $this, 'render_operator_inventory_shortcode' ) );
 		add_action( 'admin_post_ec_client_reschedule_appointment', array( $this, 'handle_client_reschedule_appointment' ) );
 		add_action( 'admin_post_ec_operator_reschedule_appointment', array( $this, 'handle_operator_reschedule_appointment' ) );
 		add_action( 'admin_post_ec_client_update_quotation_status', array( $this, 'handle_client_update_quotation_status' ) );
@@ -2291,6 +2292,207 @@ class EC_Core {
 
 		return $output;
 	}
+
+	/**
+	 * Renderiza inventario para operario autenticado.
+	 *
+	 * @return string
+	 */
+	public function render_operator_inventory_shortcode( $atts = array() ) {
+		$current_user_id = get_current_user_id();
+		$atts = shortcode_atts(
+			array(
+				'limit' => 30,
+				'page' => 1,
+				'stock_state' => '',
+				'min_stock' => '',
+				'sku' => '',
+				'category' => '',
+			),
+			$atts,
+			'ec_operator_inventory'
+		);
+
+		if ( ! $current_user_id ) {
+			return '<p>' . esc_html__( 'Debes iniciar sesión para ver el inventario.', 'electrocam-crm' ) . '</p>';
+		}
+
+		if ( ! current_user_can( 'edit_ec_inventory_items' ) ) {
+			return '<p>' . esc_html__( 'No tienes permisos de operario para ver esta información.', 'electrocam-crm' ) . '</p>';
+		}
+
+		$limit = max( 1, min( 200, absint( $atts['limit'] ) ) );
+		$page = max( 1, absint( $atts['page'] ) );
+		$stock_state = sanitize_key( (string) $atts['stock_state'] );
+		$min_stock = '' === (string) $atts['min_stock'] ? '' : absint( $atts['min_stock'] );
+		$sku = sanitize_text_field( (string) $atts['sku'] );
+		$category = sanitize_title( (string) $atts['category'] );
+
+		if ( isset( $_GET['eci_limit'] ) ) {
+			$limit = max( 1, min( 200, absint( wp_unslash( $_GET['eci_limit'] ) ) ) );
+		}
+		if ( isset( $_GET['eci_page'] ) ) {
+			$page = max( 1, absint( wp_unslash( $_GET['eci_page'] ) ) );
+		}
+		if ( isset( $_GET['eci_stock_state'] ) ) {
+			$stock_state = sanitize_key( (string) wp_unslash( $_GET['eci_stock_state'] ) );
+		}
+		if ( isset( $_GET['eci_min_stock'] ) ) {
+			$min_stock_raw = sanitize_text_field( (string) wp_unslash( $_GET['eci_min_stock'] ) );
+			$min_stock = '' === $min_stock_raw ? '' : absint( $min_stock_raw );
+		}
+		if ( isset( $_GET['eci_sku'] ) ) {
+			$sku = sanitize_text_field( (string) wp_unslash( $_GET['eci_sku'] ) );
+		}
+		if ( isset( $_GET['eci_category'] ) ) {
+			$category = sanitize_title( (string) wp_unslash( $_GET['eci_category'] ) );
+		}
+
+		$allowed_stock_states = array( 'in_stock', 'low_stock', 'out_of_stock' );
+		if ( $stock_state && ! in_array( $stock_state, $allowed_stock_states, true ) ) {
+			$stock_state = '';
+		}
+
+		$offset = ( $page - 1 ) * $limit;
+		$meta_query = array();
+
+		if ( '' !== $min_stock ) {
+			$meta_query[] = array(
+				'key' => 'ec_stock_quantity',
+				'value' => (int) $min_stock,
+				'compare' => '>=',
+				'type' => 'NUMERIC',
+			);
+		}
+
+		if ( 'out_of_stock' === $stock_state ) {
+			$meta_query[] = array(
+				'key' => 'ec_stock_quantity',
+				'value' => 0,
+				'compare' => '=',
+				'type' => 'NUMERIC',
+			);
+		} elseif ( 'low_stock' === $stock_state ) {
+			$meta_query[] = array(
+				'relation' => 'AND',
+				array(
+					'key' => 'ec_stock_quantity',
+					'value' => 1,
+					'compare' => '>=',
+					'type' => 'NUMERIC',
+				),
+				array(
+					'key' => 'ec_stock_quantity',
+					'value' => 10,
+					'compare' => '<=',
+					'type' => 'NUMERIC',
+				),
+			);
+		} elseif ( 'in_stock' === $stock_state ) {
+			$meta_query[] = array(
+				'key' => 'ec_stock_quantity',
+				'value' => 11,
+				'compare' => '>=',
+				'type' => 'NUMERIC',
+			);
+		}
+
+		$args = array(
+			'post_type' => 'inventory_item',
+			'post_status' => array( 'publish', 'private' ),
+			'posts_per_page' => $limit + 1,
+			'offset' => $offset,
+			'orderby' => 'title',
+			'order' => 'ASC',
+		);
+
+		if ( ! empty( $meta_query ) ) {
+			$args['meta_query'] = $meta_query;
+		}
+		if ( $category ) {
+			$args['tax_query'] = array(
+				array(
+					'taxonomy' => 'inventory_category',
+					'field' => 'slug',
+					'terms' => $category,
+				),
+			);
+		}
+		if ( $sku ) {
+			$args['meta_query'] = isset( $args['meta_query'] ) ? $args['meta_query'] : array();
+			$args['meta_query'][] = array(
+				'key' => 'ec_sku',
+				'value' => $sku,
+				'compare' => 'LIKE',
+			);
+		}
+
+		$items = get_posts( $args );
+		if ( empty( $items ) ) {
+			if ( $stock_state || '' !== $min_stock || $sku || $category ) {
+				return '<p>' . esc_html__( 'No hay ítems de inventario para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
+			}
+			return '<p>' . esc_html__( 'No hay ítems de inventario registrados.', 'electrocam-crm' ) . '</p>';
+		}
+
+		$has_more = count( $items ) > $limit;
+		if ( $has_more ) {
+			$items = array_slice( $items, 0, $limit );
+		}
+
+		$output = '<ul class="ec-operator-list ec-operator-inventory">';
+		foreach ( $items as $item ) {
+			$sku_value = (string) get_post_meta( $item->ID, 'ec_sku', true );
+			$stock = (int) get_post_meta( $item->ID, 'ec_stock_quantity', true );
+			$stock_label = __( 'Disponible', 'electrocam-crm' );
+			if ( 0 === $stock ) {
+				$stock_label = __( 'Agotado', 'electrocam-crm' );
+			} elseif ( $stock <= 10 ) {
+				$stock_label = __( 'Bajo stock', 'electrocam-crm' );
+			}
+			$terms = get_the_terms( $item->ID, 'inventory_category' );
+			$category_label = '';
+			if ( is_array( $terms ) && ! empty( $terms ) ) {
+				$category_names = wp_list_pluck( $terms, 'name' );
+				$category_label = implode( ', ', array_map( 'sanitize_text_field', $category_names ) );
+			}
+			$output .= '<li><strong>' . esc_html( $item->post_title ) . '</strong><br>';
+			$output .= esc_html__( 'SKU:', 'electrocam-crm' ) . ' ' . esc_html( $sku_value ? $sku_value : '-' ) . ' · ';
+			$output .= esc_html__( 'Stock:', 'electrocam-crm' ) . ' ' . esc_html( (string) $stock ) . ' (' . esc_html( $stock_label ) . ')';
+			if ( $category_label ) {
+				$output .= '<br>' . esc_html__( 'Categoría:', 'electrocam-crm' ) . ' ' . esc_html( $category_label );
+			}
+			$output .= '</li>';
+		}
+		$output .= '</ul>';
+
+		$pagination_base_args = array(
+			'eci_page' => $page,
+			'eci_limit' => $limit,
+			'eci_stock_state' => $stock_state,
+			'eci_min_stock' => '' === $min_stock ? '' : (string) $min_stock,
+			'eci_sku' => $sku,
+			'eci_category' => $category,
+		);
+
+		$pagination_links = array();
+		if ( $page > 1 ) {
+			$previous_args = $pagination_base_args;
+			$previous_args['eci_page'] = $page - 1;
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( $previous_args ) ) . '">' . esc_html__( 'Anterior', 'electrocam-crm' ) . '</a>';
+		}
+		if ( $has_more ) {
+			$next_args = $pagination_base_args;
+			$next_args['eci_page'] = $page + 1;
+			$pagination_links[] = '<a href="' . esc_url( add_query_arg( $next_args ) ) . '">' . esc_html__( 'Siguiente', 'electrocam-crm' ) . '</a>';
+		}
+		if ( ! empty( $pagination_links ) ) {
+			$output .= '<p class="ec-pagination-links">' . implode( ' | ', $pagination_links ) . '</p>';
+		}
+
+		return $output;
+	}
+
 
 	/**
 	 * Renderiza citas vinculadas al operario autenticado.

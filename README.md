@@ -118,6 +118,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 96. Shortcodes de órdenes ahora admiten filtros por query string `eco_status` y `eco_limit`, preservan esos valores en paginación y muestran etiqueta legible de estado (Pendiente/En curso/Finalizado).
 97. Validación de fechas en órdenes reforzada con comprobación de calendario real (`checkdate`) para `eco_from/eco_to` y atributos `date_from/date_to`, evitando rangos inválidos.
 98. Módulo de cotizaciones: shortcodes cliente/operario ahora aceptan filtros por query args `ecq_status`, `ecq_show_expired`, `ecq_limit`, `ecq_from`, `ecq_to` (vigencia), con normalización de rango y preservación en paginación.
+99. Módulo de inventario: nuevo shortcode `[ec_operator_inventory]` con filtros por estado de stock, stock mínimo, SKU y categoría (incluye query args `eci_*` y paginación con preservación de filtros).
 
 ## Estructura
 
@@ -151,7 +152,7 @@ electrocam-crm/
 - Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **100%**
 - Módulo de órdenes de servicio (metabox + trazabilidad + filtros frontend): **100%**
 - Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **100%**
-- Módulo de inventario (metabox + persistencia): **40%**
+- Módulo de inventario (metabox + persistencia): **100%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **100%**
 - Portal cliente/frontend operativo (shortcodes + acciones + filtros + paginación): **100%**
 - PDF y correo automático: **10%**
