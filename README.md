@@ -116,6 +116,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 94. Carga de traducciones movida a `plugins_loaded` para asegurar inicialización i18n temprana y consistente en toda la base técnica.
 95. Shortcodes de órdenes (cliente/operario) ahora aceptan rango de fechas `date_from/date_to` (y query args `eco_from/eco_to`) con normalización y preservación en paginación.
 96. Shortcodes de órdenes ahora admiten filtros por query string `eco_status` y `eco_limit`, preservan esos valores en paginación y muestran etiqueta legible de estado (Pendiente/En curso/Finalizado).
+97. Validación de fechas en órdenes reforzada con comprobación de calendario real (`checkdate`) para `eco_from/eco_to` y atributos `date_from/date_to`, evitando rangos inválidos.
 
 ## Estructura
 

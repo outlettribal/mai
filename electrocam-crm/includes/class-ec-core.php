@@ -1402,10 +1402,10 @@ class EC_Core {
 
 		$date_from = isset( $_GET['eco_from'] ) ? sanitize_text_field( wp_unslash( $_GET['eco_from'] ) ) : sanitize_text_field( (string) $atts['date_from'] );
 		$date_to = isset( $_GET['eco_to'] ) ? sanitize_text_field( wp_unslash( $_GET['eco_to'] ) ) : sanitize_text_field( (string) $atts['date_to'] );
-		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_from ) ) {
+		if ( ! $this->is_valid_ymd_date( $date_from ) ) {
 			$date_from = '';
 		}
-		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_to ) ) {
+		if ( ! $this->is_valid_ymd_date( $date_to ) ) {
 			$date_to = '';
 		}
 		if ( $date_from && $date_to && $date_from > $date_to ) {
@@ -1532,6 +1532,30 @@ class EC_Core {
 		}
 
 		return ucfirst( str_replace( '_', ' ', $status ) );
+	}
+
+
+	/**
+	 * Valida formato de fecha Y-m-d y calendario real.
+	 *
+	 * @param string $date Fecha candidata.
+	 * @return bool
+	 */
+	private function is_valid_ymd_date( $date ) {
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', (string) $date ) ) {
+			return false;
+		}
+
+		$parts = explode( '-', (string) $date );
+		if ( 3 !== count( $parts ) ) {
+			return false;
+		}
+
+		$year = (int) $parts[0];
+		$month = (int) $parts[1];
+		$day = (int) $parts[2];
+
+		return checkdate( $month, $day, $year );
 	}
 
 	/**
@@ -1751,10 +1775,10 @@ class EC_Core {
 		if ( isset( $_GET['eca_to'] ) ) {
 			$date_to = sanitize_text_field( (string) wp_unslash( $_GET['eca_to'] ) );
 		}
-		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_from ) ) {
+		if ( ! $this->is_valid_ymd_date( $date_from ) ) {
 			$date_from = '';
 		}
-		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_to ) ) {
+		if ( ! $this->is_valid_ymd_date( $date_to ) ) {
 			$date_to = '';
 		}
 		if ( $date_from && $date_to && $date_from > $date_to ) {
@@ -1933,10 +1957,10 @@ class EC_Core {
 
 		$date_from = isset( $_GET['eco_from'] ) ? sanitize_text_field( wp_unslash( $_GET['eco_from'] ) ) : sanitize_text_field( (string) $atts['date_from'] );
 		$date_to = isset( $_GET['eco_to'] ) ? sanitize_text_field( wp_unslash( $_GET['eco_to'] ) ) : sanitize_text_field( (string) $atts['date_to'] );
-		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_from ) ) {
+		if ( ! $this->is_valid_ymd_date( $date_from ) ) {
 			$date_from = '';
 		}
-		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_to ) ) {
+		if ( ! $this->is_valid_ymd_date( $date_to ) ) {
 			$date_to = '';
 		}
 		if ( $date_from && $date_to && $date_from > $date_to ) {
