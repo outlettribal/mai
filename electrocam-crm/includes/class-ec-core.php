@@ -1375,6 +1375,8 @@ class EC_Core {
 				'limit' => 20,
 				'page' => 1,
 				'status' => '',
+				'date_from' => '',
+				'date_to' => '',
 			),
 			$atts,
 			'ec_client_orders'
@@ -1394,6 +1396,21 @@ class EC_Core {
 			$page = max( 1, absint( wp_unslash( $_GET['eco_client_page'] ) ) );
 		}
 		$offset = ( $page - 1 ) * $limit;
+
+		$date_from = isset( $_GET['eco_from'] ) ? sanitize_text_field( wp_unslash( $_GET['eco_from'] ) ) : sanitize_text_field( (string) $atts['date_from'] );
+		$date_to = isset( $_GET['eco_to'] ) ? sanitize_text_field( wp_unslash( $_GET['eco_to'] ) ) : sanitize_text_field( (string) $atts['date_to'] );
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_from ) ) {
+			$date_from = '';
+		}
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_to ) ) {
+			$date_to = '';
+		}
+		if ( $date_from && $date_to && $date_from > $date_to ) {
+			$temp = $date_from;
+			$date_from = $date_to;
+			$date_to = $temp;
+		}
+
 		$filter_status = sanitize_key( (string) $atts['status'] );
 		$allowed_statuses = array( 'pending', 'in_progress', 'completed' );
 		if ( $filter_status && ! in_array( $filter_status, $allowed_statuses, true ) ) {
@@ -1412,6 +1429,22 @@ class EC_Core {
 				'value' => $filter_status,
 			);
 		}
+		if ( $date_from ) {
+			$meta_query[] = array(
+				'key' => 'ec_service_date',
+				'value' => $date_from,
+				'compare' => '>=',
+				'type' => 'DATE',
+			);
+		}
+		if ( $date_to ) {
+			$meta_query[] = array(
+				'key' => 'ec_service_date',
+				'value' => $date_to,
+				'compare' => '<=',
+				'type' => 'DATE',
+			);
+		}
 
 		$orders = get_posts(
 			array(
@@ -1426,7 +1459,7 @@ class EC_Core {
 		);
 
 		if ( empty( $orders ) ) {
-			if ( $filter_status ) {
+			if ( $filter_status || $date_from || $date_to ) {
 				return '<p>' . esc_html__( 'No hay órdenes para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
 			}
 			return '<p>' . esc_html__( 'No tienes órdenes registradas.', 'electrocam-crm' ) . '</p>';
@@ -1452,6 +1485,8 @@ class EC_Core {
 			'eco_client_page' => $page,
 			'limit' => $limit,
 			'status' => $filter_status,
+			'eco_from' => $date_from,
+			'eco_to' => $date_to,
 		);
 
 		$pagination_links = array();
@@ -1667,6 +1702,7 @@ class EC_Core {
 			$limit = max( 1, min( 100, absint( wp_unslash( $_GET['eca_limit'] ) ) ) );
 		}
 		$offset = ( $page - 1 ) * $limit;
+
 		$filter_status = sanitize_key( (string) $atts['status'] );
 		if ( isset( $_GET['eca_status'] ) ) {
 			$filter_status = sanitize_key( (string) wp_unslash( $_GET['eca_status'] ) );
@@ -1843,6 +1879,8 @@ class EC_Core {
 				'limit' => 20,
 				'page' => 1,
 				'status' => '',
+				'date_from' => '',
+				'date_to' => '',
 			),
 			$atts,
 			'ec_operator_orders'
@@ -1862,6 +1900,21 @@ class EC_Core {
 			$page = max( 1, absint( wp_unslash( $_GET['eco_operator_page'] ) ) );
 		}
 		$offset = ( $page - 1 ) * $limit;
+
+		$date_from = isset( $_GET['eco_from'] ) ? sanitize_text_field( wp_unslash( $_GET['eco_from'] ) ) : sanitize_text_field( (string) $atts['date_from'] );
+		$date_to = isset( $_GET['eco_to'] ) ? sanitize_text_field( wp_unslash( $_GET['eco_to'] ) ) : sanitize_text_field( (string) $atts['date_to'] );
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_from ) ) {
+			$date_from = '';
+		}
+		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $date_to ) ) {
+			$date_to = '';
+		}
+		if ( $date_from && $date_to && $date_from > $date_to ) {
+			$temp = $date_from;
+			$date_from = $date_to;
+			$date_to = $temp;
+		}
+
 		$filter_status = sanitize_key( (string) $atts['status'] );
 		$allowed_statuses = array( 'pending', 'in_progress', 'completed' );
 		if ( $filter_status && ! in_array( $filter_status, $allowed_statuses, true ) ) {
@@ -1880,6 +1933,22 @@ class EC_Core {
 				'value' => $filter_status,
 			);
 		}
+		if ( $date_from ) {
+			$meta_query[] = array(
+				'key' => 'ec_service_date',
+				'value' => $date_from,
+				'compare' => '>=',
+				'type' => 'DATE',
+			);
+		}
+		if ( $date_to ) {
+			$meta_query[] = array(
+				'key' => 'ec_service_date',
+				'value' => $date_to,
+				'compare' => '<=',
+				'type' => 'DATE',
+			);
+		}
 
 		$orders = get_posts(
 			array(
@@ -1894,7 +1963,7 @@ class EC_Core {
 		);
 
 		if ( empty( $orders ) ) {
-			if ( $filter_status ) {
+			if ( $filter_status || $date_from || $date_to ) {
 				return '<p>' . esc_html__( 'No hay órdenes para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
 			}
 			return '<p>' . esc_html__( 'No tienes órdenes asignadas.', 'electrocam-crm' ) . '</p>';
@@ -1918,6 +1987,8 @@ class EC_Core {
 			'eco_operator_page' => $page,
 			'limit' => $limit,
 			'status' => $filter_status,
+			'eco_from' => $date_from,
+			'eco_to' => $date_to,
 		);
 
 		$pagination_links = array();

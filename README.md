@@ -114,6 +114,7 @@ En esta iteración el plugin ya incluye una **primera capa funcional**:
 92. Se añadió validación defensiva del estado semántico (`failed|clear`) antes de renderizar atributos para mantener salida predecible ante metadatos inesperados.
 93. El estado semántico de fallo ahora expone filtro `ec_reminder_failure_state` (con whitelist defensiva `failed|clear`) para extensibilidad controlada.
 94. Carga de traducciones movida a `plugins_loaded` para asegurar inicialización i18n temprana y consistente en toda la base técnica.
+95. Shortcodes de órdenes (cliente/operario) ahora aceptan rango de fechas `date_from/date_to` (y query args `eco_from/eco_to`) con normalización y preservación en paginación.
 
 ## Estructura
 
@@ -145,7 +146,7 @@ electrocam-crm/
 ## Avance estimado del proyecto
 
 - Base técnica del plugin (bootstrap, CPT, taxonomía, roles): **100%**
-- Módulo de órdenes de servicio (metabox + trazabilidad + filtros frontend): **75%**
+- Módulo de órdenes de servicio (metabox + trazabilidad + filtros frontend): **82%**
 - Módulo de cotizaciones (ítems + estados + aprobación + historial/auditoría): **99%**
 - Módulo de inventario (metabox + persistencia): **40%**
 - Módulo de agenda/citas (metabox + anti-solapamiento + reprogramación frontend básica): **100%**
