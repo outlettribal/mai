@@ -1392,6 +1392,9 @@ class EC_Core {
 
 		$limit = max( 1, min( 100, absint( $atts['limit'] ) ) );
 		$page = max( 1, absint( $atts['page'] ) );
+		if ( isset( $_GET['eco_limit'] ) ) {
+			$limit = max( 1, min( 100, absint( wp_unslash( $_GET['eco_limit'] ) ) ) );
+		}
 		if ( isset( $_GET['eco_client_page'] ) ) {
 			$page = max( 1, absint( wp_unslash( $_GET['eco_client_page'] ) ) );
 		}
@@ -1412,6 +1415,9 @@ class EC_Core {
 		}
 
 		$filter_status = sanitize_key( (string) $atts['status'] );
+		if ( isset( $_GET['eco_status'] ) ) {
+			$filter_status = sanitize_key( (string) wp_unslash( $_GET['eco_status'] ) );
+		}
 		$allowed_statuses = array( 'pending', 'in_progress', 'completed' );
 		if ( $filter_status && ! in_array( $filter_status, $allowed_statuses, true ) ) {
 			$filter_status = '';
@@ -1476,15 +1482,16 @@ class EC_Core {
 			$order_number = get_post_meta( $order->ID, 'ec_order_number', true );
 			$status = get_post_meta( $order->ID, 'ec_status', true );
 			$service_date = get_post_meta( $order->ID, 'ec_service_date', true );
-			$output .= '<li><strong>' . esc_html( $order_number ? $order_number : $order->post_title ) . '</strong> - ' . esc_html( $service_date ) . ' - ' . esc_html( $status ) . '</li>';
+			$status_label = $this->get_service_order_status_label( (string) $status );
+			$output .= '<li><strong>' . esc_html( $order_number ? $order_number : $order->post_title ) . '</strong> - ' . esc_html( $service_date ) . ' - ' . esc_html( $status_label ) . '</li>';
 		}
 
 		$output .= '</ul>';
 
 		$pagination_base_args = array(
 			'eco_client_page' => $page,
-			'limit' => $limit,
-			'status' => $filter_status,
+			'eco_limit' => $limit,
+			'eco_status' => $filter_status,
 			'eco_from' => $date_from,
 			'eco_to' => $date_to,
 		);
@@ -1505,6 +1512,26 @@ class EC_Core {
 		}
 
 		return $output;
+	}
+
+	/**
+	 * Obtiene etiqueta de estado de orden de servicio para frontend.
+	 *
+	 * @param string $status Estado almacenado.
+	 * @return string
+	 */
+	private function get_service_order_status_label( $status ) {
+		$labels = array(
+			'pending' => __( 'Pendiente', 'electrocam-crm' ),
+			'in_progress' => __( 'En curso', 'electrocam-crm' ),
+			'completed' => __( 'Finalizado', 'electrocam-crm' ),
+		);
+
+		if ( isset( $labels[ $status ] ) ) {
+			return $labels[ $status ];
+		}
+
+		return ucfirst( str_replace( '_', ' ', $status ) );
 	}
 
 	/**
@@ -1896,6 +1923,9 @@ class EC_Core {
 
 		$limit = max( 1, min( 100, absint( $atts['limit'] ) ) );
 		$page = max( 1, absint( $atts['page'] ) );
+		if ( isset( $_GET['eco_limit'] ) ) {
+			$limit = max( 1, min( 100, absint( wp_unslash( $_GET['eco_limit'] ) ) ) );
+		}
 		if ( isset( $_GET['eco_operator_page'] ) ) {
 			$page = max( 1, absint( wp_unslash( $_GET['eco_operator_page'] ) ) );
 		}
@@ -1916,6 +1946,9 @@ class EC_Core {
 		}
 
 		$filter_status = sanitize_key( (string) $atts['status'] );
+		if ( isset( $_GET['eco_status'] ) ) {
+			$filter_status = sanitize_key( (string) wp_unslash( $_GET['eco_status'] ) );
+		}
 		$allowed_statuses = array( 'pending', 'in_progress', 'completed' );
 		if ( $filter_status && ! in_array( $filter_status, $allowed_statuses, true ) ) {
 			$filter_status = '';
@@ -1979,14 +2012,15 @@ class EC_Core {
 			$order_number = get_post_meta( $order->ID, 'ec_order_number', true );
 			$status = get_post_meta( $order->ID, 'ec_status', true );
 			$service_date = get_post_meta( $order->ID, 'ec_service_date', true );
-			$output .= '<li><strong>' . esc_html( $order_number ? $order_number : $order->post_title ) . '</strong> - ' . esc_html( $service_date ) . ' - ' . esc_html( $status ) . '</li>';
+			$status_label = $this->get_service_order_status_label( (string) $status );
+			$output .= '<li><strong>' . esc_html( $order_number ? $order_number : $order->post_title ) . '</strong> - ' . esc_html( $service_date ) . ' - ' . esc_html( $status_label ) . '</li>';
 		}
 		$output .= '</ul>';
 
 		$pagination_base_args = array(
 			'eco_operator_page' => $page,
-			'limit' => $limit,
-			'status' => $filter_status,
+			'eco_limit' => $limit,
+			'eco_status' => $filter_status,
 			'eco_from' => $date_from,
 			'eco_to' => $date_to,
 		);
