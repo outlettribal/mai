@@ -1589,6 +1589,8 @@ class EC_Core {
 				'show_expired' => 'yes',
 				'limit' => 50,
 				'page' => 1,
+				'date_from' => '',
+				'date_to' => '',
 			),
 			$atts,
 			'ec_client_quotations'
@@ -1603,10 +1605,44 @@ class EC_Core {
 		$show_expired = 'no' !== strtolower( (string) $atts['show_expired'] );
 		$limit = max( 1, min( 200, absint( $atts['limit'] ) ) );
 		$page = max( 1, absint( $atts['page'] ) );
+		$date_from = sanitize_text_field( (string) $atts['date_from'] );
+		$date_to = sanitize_text_field( (string) $atts['date_to'] );
+		if ( isset( $_GET['ecq_status'] ) ) {
+			$filter_status = sanitize_key( (string) wp_unslash( $_GET['ecq_status'] ) );
+		} elseif ( isset( $_GET['status'] ) ) {
+			$filter_status = sanitize_key( (string) wp_unslash( $_GET['status'] ) );
+		}
+		if ( isset( $_GET['ecq_show_expired'] ) ) {
+			$show_expired = 'no' !== strtolower( (string) wp_unslash( $_GET['ecq_show_expired'] ) );
+		} elseif ( isset( $_GET['show_expired'] ) ) {
+			$show_expired = 'no' !== strtolower( (string) wp_unslash( $_GET['show_expired'] ) );
+		}
+		if ( isset( $_GET['ecq_limit'] ) ) {
+			$limit = max( 1, min( 200, absint( wp_unslash( $_GET['ecq_limit'] ) ) ) );
+		} elseif ( isset( $_GET['limit'] ) ) {
+			$limit = max( 1, min( 200, absint( wp_unslash( $_GET['limit'] ) ) ) );
+		}
+		if ( isset( $_GET['ecq_from'] ) ) {
+			$date_from = sanitize_text_field( (string) wp_unslash( $_GET['ecq_from'] ) );
+		}
+		if ( isset( $_GET['ecq_to'] ) ) {
+			$date_to = sanitize_text_field( (string) wp_unslash( $_GET['ecq_to'] ) );
+		}
 		if ( isset( $_GET['ecq_client_page'] ) ) {
 			$page = max( 1, absint( wp_unslash( $_GET['ecq_client_page'] ) ) );
 		}
 		$offset = ( $page - 1 ) * $limit;
+		if ( ! $this->is_valid_ymd_date( $date_from ) ) {
+			$date_from = '';
+		}
+		if ( ! $this->is_valid_ymd_date( $date_to ) ) {
+			$date_to = '';
+		}
+		if ( $date_from && $date_to && $date_from > $date_to ) {
+			$temp = $date_from;
+			$date_from = $date_to;
+			$date_to = $temp;
+		}
 
 		$allowed_filter_statuses = array( 'draft', 'sent', 'approved', 'rejected', 'expired' );
 		if ( $filter_status && ! in_array( $filter_status, $allowed_filter_statuses, true ) ) {
@@ -1631,6 +1667,9 @@ class EC_Core {
 		);
 
 		if ( empty( $quotations ) ) {
+			if ( $filter_status || ! $show_expired || $date_from || $date_to ) {
+				return $message . '<p>' . esc_html__( 'No hay cotizaciones para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
+			}
 			return $message . '<p>' . esc_html__( 'No tienes cotizaciones registradas.', 'electrocam-crm' ) . '</p>';
 		}
 
@@ -1661,6 +1700,14 @@ class EC_Core {
 			}
 
 			if ( $filter_status && $filter_status !== $status ) {
+				continue;
+			}
+
+			if ( $date_from && ( ! $this->is_valid_ymd_date( $valid_until ) || $valid_until < $date_from ) ) {
+				continue;
+			}
+
+			if ( $date_to && ( ! $this->is_valid_ymd_date( $valid_until ) || $valid_until > $date_to ) ) {
 				continue;
 			}
 
@@ -1695,9 +1742,11 @@ class EC_Core {
 
 		$pagination_base_args = array(
 			'ecq_client_page' => $page,
-			'status' => $filter_status,
-			'show_expired' => $show_expired ? 'yes' : 'no',
-			'limit' => $limit,
+			'ecq_status' => $filter_status,
+			'ecq_show_expired' => $show_expired ? 'yes' : 'no',
+			'ecq_limit' => $limit,
+			'ecq_from' => $date_from,
+			'ecq_to' => $date_to,
 		);
 
 		$pagination_links = array();
@@ -2081,6 +2130,8 @@ class EC_Core {
 				'show_expired' => 'yes',
 				'limit' => 50,
 				'page' => 1,
+				'date_from' => '',
+				'date_to' => '',
 			),
 			$atts,
 			'ec_operator_quotations'
@@ -2098,10 +2149,44 @@ class EC_Core {
 		$show_expired = 'no' !== strtolower( (string) $atts['show_expired'] );
 		$limit = max( 1, min( 200, absint( $atts['limit'] ) ) );
 		$page = max( 1, absint( $atts['page'] ) );
+		$date_from = sanitize_text_field( (string) $atts['date_from'] );
+		$date_to = sanitize_text_field( (string) $atts['date_to'] );
+		if ( isset( $_GET['ecq_status'] ) ) {
+			$filter_status = sanitize_key( (string) wp_unslash( $_GET['ecq_status'] ) );
+		} elseif ( isset( $_GET['status'] ) ) {
+			$filter_status = sanitize_key( (string) wp_unslash( $_GET['status'] ) );
+		}
+		if ( isset( $_GET['ecq_show_expired'] ) ) {
+			$show_expired = 'no' !== strtolower( (string) wp_unslash( $_GET['ecq_show_expired'] ) );
+		} elseif ( isset( $_GET['show_expired'] ) ) {
+			$show_expired = 'no' !== strtolower( (string) wp_unslash( $_GET['show_expired'] ) );
+		}
+		if ( isset( $_GET['ecq_limit'] ) ) {
+			$limit = max( 1, min( 200, absint( wp_unslash( $_GET['ecq_limit'] ) ) ) );
+		} elseif ( isset( $_GET['limit'] ) ) {
+			$limit = max( 1, min( 200, absint( wp_unslash( $_GET['limit'] ) ) ) );
+		}
+		if ( isset( $_GET['ecq_from'] ) ) {
+			$date_from = sanitize_text_field( (string) wp_unslash( $_GET['ecq_from'] ) );
+		}
+		if ( isset( $_GET['ecq_to'] ) ) {
+			$date_to = sanitize_text_field( (string) wp_unslash( $_GET['ecq_to'] ) );
+		}
 		if ( isset( $_GET['ecq_operator_page'] ) ) {
 			$page = max( 1, absint( wp_unslash( $_GET['ecq_operator_page'] ) ) );
 		}
 		$offset = ( $page - 1 ) * $limit;
+		if ( ! $this->is_valid_ymd_date( $date_from ) ) {
+			$date_from = '';
+		}
+		if ( ! $this->is_valid_ymd_date( $date_to ) ) {
+			$date_to = '';
+		}
+		if ( $date_from && $date_to && $date_from > $date_to ) {
+			$temp = $date_from;
+			$date_from = $date_to;
+			$date_to = $temp;
+		}
 		$allowed_filter_statuses = array( 'draft', 'sent', 'approved', 'rejected', 'expired' );
 		if ( $filter_status && ! in_array( $filter_status, $allowed_filter_statuses, true ) ) {
 			$filter_status = '';
@@ -2125,6 +2210,9 @@ class EC_Core {
 		);
 
 		if ( empty( $quotations ) ) {
+			if ( $filter_status || ! $show_expired || $date_from || $date_to ) {
+				return '<p>' . esc_html__( 'No hay cotizaciones para el filtro seleccionado.', 'electrocam-crm' ) . '</p>';
+			}
 			return '<p>' . esc_html__( 'No tienes cotizaciones asignadas.', 'electrocam-crm' ) . '</p>';
 		}
 
@@ -2153,6 +2241,14 @@ class EC_Core {
 				continue;
 			}
 
+			if ( $date_from && ( ! $this->is_valid_ymd_date( $valid_until ) || $valid_until < $date_from ) ) {
+				continue;
+			}
+
+			if ( $date_to && ( ! $this->is_valid_ymd_date( $valid_until ) || $valid_until > $date_to ) ) {
+				continue;
+			}
+
 			$has_results = true;
 			$output .= '<li><strong>' . esc_html( $quotation->post_title ) . '</strong><br>';
 			$output .= esc_html__( 'Estado:', 'electrocam-crm' ) . ' ' . esc_html( $this->get_quotation_status_label( $status ? $status : 'draft' ) ) . ' · ';
@@ -2171,9 +2267,11 @@ class EC_Core {
 
 		$pagination_base_args = array(
 			'ecq_operator_page' => $page,
-			'status' => $filter_status,
-			'show_expired' => $show_expired ? 'yes' : 'no',
-			'limit' => $limit,
+			'ecq_status' => $filter_status,
+			'ecq_show_expired' => $show_expired ? 'yes' : 'no',
+			'ecq_limit' => $limit,
+			'ecq_from' => $date_from,
+			'ecq_to' => $date_to,
 		);
 
 		$pagination_links = array();
